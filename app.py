@@ -15,7 +15,7 @@ initialize_session_state()
 
 if not st.session_state.session_started:
     try:
-        st.sidebar.image("assets/transahara-logo-fullcolor.jpg", use_column_width=True)
+        st.sidebar.image("assets/transahara-logo-fullcolor.jpg", use_container_width=True)
     except Exception:
         st.sidebar.markdown("**Trans-Sahara**")
 
