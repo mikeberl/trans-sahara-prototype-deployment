@@ -48,30 +48,6 @@ def get_policy_type_color(policy_type: str) -> str:
     }
     return type_colors.get(policy_type, '#34495e')
 
-def infer_policy_pillar(policy: Dict) -> str:
-    """Infer which WEFE pillar (water, energy, food, ecosystems) a policy most closely relates to.
-
-    Falls back to simple heuristics using policy_type and title keywords.
-    Returns one of: 'water', 'energy', 'food', 'ecosystems' or '' if unknown.
-    """
-    ptype = (policy.get('policy_type') or '').lower()
-    title = (policy.get('title') or '').lower()
-
-    # Direct mapping if policy_type already matches a pillar
-    if ptype in ['water', 'energy', 'food', 'ecosystem', 'ecosystems']:
-        return 'ecosystems' if ptype == 'ecosystem' else ptype
-
-    # Heuristics based on title keywords
-    if any(k in title for k in ['water', 'irrigation', 'wastewater']):
-        return 'water'
-    if any(k in title for k in ['energy', 'renewable', 'electric', 'power']):
-        return 'energy'
-    if any(k in title for k in ['agri', 'food', 'nutrition', 'farm']):
-        return 'food'
-    if any(k in title for k in ['eco', 'biodiver', 'forest', 'marine', 'green', 'urban green', 'conservation']):
-        return 'ecosystems'
-
-    return ''
 
 def render_synergy_tradeoff_item(item: Dict, policy_title: str, is_synergy: bool = True):
     """Render a single synergy or trade-off item"""
@@ -81,14 +57,15 @@ def render_synergy_tradeoff_item(item: Dict, policy_title: str, is_synergy: bool
     # Create a container with colored background based on category
     bg_color = color + "20"  # Add transparency to the color
     
-    with st.container():
-        col1, col2 = st.columns(2)
-        
-        with col1:
-            st.markdown(f"<span style='color: {color}; font-weight: bold;'>{item['title']}</span>", unsafe_allow_html=True)
-        with col2:
-            unique_key = f"info_{policy_title}_{item['title']}_{is_synergy}".replace(" ", "_").replace("-", "_")
-            show_info = st.button("ℹ️", key=unique_key, help="Click for description")
+    
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        st.markdown(f"<span style='color: {color}; font-weight: bold;'>{item['title']}</span>", unsafe_allow_html=True)
+    
+    with col2:
+        unique_key = f"info_{policy_title}_{item['title']}_{is_synergy}".replace(" ", "_").replace("-", "_")
+        show_info = st.button("ℹ️", key=unique_key, help="Click for description")
         
     if show_info:
         st.info(item['description'])

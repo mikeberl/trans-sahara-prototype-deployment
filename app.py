@@ -13,12 +13,12 @@ st.set_page_config(layout="wide", page_title="Trans-Sahara Support Tool")
 # Initialize session state
 initialize_session_state()
 
-# Sidebar branding (top)
-try:
-    st.sidebar.image("assets/transahara-logo-fullcolor.jpg", use_container_width=True)
-except Exception:
-    st.sidebar.markdown("**Trans-Sahara**")
-st.sidebar.markdown("---")
+if not st.session_state.session_started:
+    try:
+        st.sidebar.image("assets/transahara-logo-fullcolor.jpg", use_column_width=True)
+    except Exception:
+        st.sidebar.markdown("**Trans-Sahara**")
+
 
 # Sidebar Setup
 if not st.session_state.session_started:
