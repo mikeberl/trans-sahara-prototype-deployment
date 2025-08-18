@@ -15,7 +15,7 @@ initialize_session_state()
 
 # Sidebar branding (top)
 try:
-    st.sidebar.image("assets/transahara-logo-fullcolor.jpg", use_column_width=True)
+    st.sidebar.image("assets/transahara-logo-fullcolor.jpg", use_container_width=True)
 except Exception:
     st.sidebar.markdown("**Trans-Sahara**")
 st.sidebar.markdown("---")
