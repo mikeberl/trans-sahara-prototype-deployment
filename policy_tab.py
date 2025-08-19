@@ -4,12 +4,13 @@ import pandas as pd
 from typing import Dict, List, Any
 import plotly.graph_objects as go
 from initial_page import get_selected_lab_info
+import os
 
 # Load policies data
 def load_policies():
     """Load policies from JSON file"""
     try:
-        with open('assets/data/policies.json', 'r') as f:
+        with open(os.path.join(os.path.dirname(__file__), 'data', 'policies.json'), 'r') as f:
             return json.load(f)
     except FileNotFoundError:
         st.error("Policies file not found!")
