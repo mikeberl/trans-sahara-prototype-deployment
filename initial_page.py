@@ -1,3 +1,4 @@
+import base64
 import streamlit as st
 import folium
 from folium import plugins
@@ -5,36 +6,30 @@ from utils import load_living_labs, get_regions_from_labs
 
 def create_living_labs_map(selected_lab=None):
     """Create an interactive map showing all living lab areas as squares"""
-    # Load living labs data
     livinglabs = load_living_labs()
     
-    # Calculate center point for the map (roughly center of North Africa)
-    center_lat = 20.0
+    # Map settings
+    center_lat = 18.0
     center_lon = 10.0
-    
-    # Create the map centered on North Africa
+    zoom_level = 4.5   
     m = folium.Map(
         location=[center_lat, center_lon],
-        zoom_start=4,
+        zoom_start=zoom_level,
         tiles='OpenStreetMap'
     )
     
     # Add each living lab area as a rectangle
     for lab in livinglabs:
-        # Get coordinates
         upper_left = lab['geolocation_area']['upper_left']
         lower_right = lab['geolocation_area']['lower_right']
         
-        # Create rectangle coordinates (folium needs list of [lat, lon] pairs)
         rectangle_coords = [
             [upper_left['lat'], upper_left['lon']],
             [upper_left['lat'], lower_right['lon']],
             [lower_right['lat'], lower_right['lon']],
             [lower_right['lat'], upper_left['lon']],
-            [upper_left['lat'], upper_left['lon']]  # Close the rectangle
+            [upper_left['lat'], upper_left['lon']]
         ]
-        
-        # Determine color based on selection
         if selected_lab and lab['name'] == selected_lab:
             color = 'blue'  # Selected lab
             weight = 3
@@ -42,7 +37,6 @@ def create_living_labs_map(selected_lab=None):
             color = 'red'   # Unselected labs
             weight = 2
         
-        # Add rectangle to map
         folium.Polygon(
             locations=rectangle_coords,
             color=color,
@@ -52,7 +46,7 @@ def create_living_labs_map(selected_lab=None):
             fillOpacity=0.3,
             popup=f"<b>{lab['name']}</b><br>Country: {lab['country']}<br>Climate: {lab['climate_type']}"
         ).add_to(m)
-    
+        
     return m
 
 def get_selected_lab_info(selected_lab_name):
@@ -66,34 +60,31 @@ def get_selected_lab_info(selected_lab_name):
             return lab
     return None
 
-def render_initial_page():
+def render_sidebar_welcome_page():
     """Render the initial setup page with sidebar configuration"""
     st.sidebar.header("1. Select Living Lab and Impact Weights")
 
-    # Load living labs from JSON
     livinglabs = load_living_labs()
     regions = get_regions_from_labs(livinglabs)
-    selected_lab = st.sidebar.selectbox("Select a Living Lab", regions, key="select_lab")
     
-    # Store the selected lab in session state for the welcome page to access
+    selected_lab = st.sidebar.selectbox("Select a Living Lab", regions, key="select_lab")
     st.session_state.current_selected_lab = selected_lab
-
     st.sidebar.markdown("---")
     
-    # WEFE weights settings (collapsible, collapsed by default)
+    # WEFE weights settings
     with st.sidebar.expander("WEFE weights settings", expanded=False):
         water_w = st.slider("Water Availability", 0, 5, 3, key="water_weight")
         energy_w = st.slider("Energy Demand", 0, 5, 3, key="energy_weight")
         food_w = st.slider("Agricultural Production", 0, 5, 3, key="food_weight")
         eco_w = st.slider("Ecosystem Health", 0, 5, 3, key="eco_weight")
 
-    # Session parameters settings (collapsible, collapsed by default)
+    # Session parameters settings 
     with st.sidebar.expander("Session parameters settings", expanded=False):
         budget = st.number_input("Budget (Million USD)", 0, 1000, 10, 1, key="budget")
         time_range = st.number_input("Simulation Year", 2030, 2100, 2030, 5, key="sim_year")
         time_interval = st.number_input("Interval (years)", 1, 20, 5, 1, key="interval")
 
-    # Scenario definition settings (collapsible, collapsed by default)
+    # Scenario definition settings
     with st.sidebar.expander("Scenario definition", expanded=False):
         st.markdown("Here it's possible to pick a specific scenario if needed for the analysis")
         scenario_options = ["Baseline", "Climate Change", "Population Growth", "Technology Adoption"]
@@ -140,7 +131,6 @@ def render_wefe_pillars_view(lab_info):
         }
     ]
 
-    st.markdown("---")
     cols = st.columns(4)
     for i, pillar in enumerate(pillars):
         data = lab_info['wefe_pillars'].get(pillar["key"], {})
@@ -171,53 +161,44 @@ def render_wefe_pillars_view(lab_info):
 
 def render_welcome_page():
     """Render the welcome page when session hasn't started"""
-    # st.info("Please configure the session in the sidebar and start.")
     
-    # Get selected lab from session state
     selected_lab = st.session_state.get('current_selected_lab', None)
     
-    # Create columns with 3:1 ratio
-    col1, col2 = st.columns([3, 1])
+    col1, col2 = st.columns([3, 1])    
     
     with col1:
-        # Create and display the interactive map
         map_obj = create_living_labs_map(selected_lab)
         st.components.v1.html(map_obj._repr_html_(), height=800, width=None)
-    
     with col2:
-        # Display selected lab information
         if selected_lab:
             lab_info = get_selected_lab_info(selected_lab)
             if lab_info:
-                # st.subheader("Selected Living Lab")
                 st.subheader(f"**{lab_info['name']}**")
                 st.markdown(f"**Country:** {lab_info['country']}")
                 st.markdown(f"**Climate Type:** {lab_info['climate_type']}")
                 st.markdown(f"**Description:** {lab_info['description']}")
                 
-                # Challenges section as expandable
                 if 'challenges' in lab_info and lab_info['challenges']:
                     with st.expander("⚠️ Main Challenges", expanded=False):
                         st.markdown("**Main challenges of the living lab:**")
                         for i, challenge in enumerate(lab_info['challenges'], 1):
                             st.markdown(f"- {challenge}")
                 
-                # Contact section as expandable
                 with st.expander("📞 Contact Information", expanded=False):
                     for contact in lab_info['contacts']:
                         st.markdown(f"- **{contact['name']}**")
                         st.markdown(f"  {contact['institution']}")
                         st.markdown(f"  📧 {contact['email']}")
                         st.markdown(f"  📞 {contact['phone']}")
-                        st.markdown("")
-                
-                
+                        st.markdown("")                
             else:
                 lab_info = None
         else:
             st.subheader("Living Lab Information")
             st.info("Select a living lab from the sidebar to view its details.")
             lab_info = None
-
-    # Add the WEFE pillar view below the columns
+            
     render_wefe_pillars_view(lab_info) 
+    
+    
+    
