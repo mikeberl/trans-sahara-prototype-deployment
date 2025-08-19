@@ -18,9 +18,9 @@
         "description": "Significant reduction in waterborne diseases and improved community health outcomes",
         "category": "Health",
         "affected_indicators": [
-          {"indicator": "Waterborne Disease Reduction", "expected_change": "-75%"},
-          {"indicator": "Child Mortality Rate", "expected_change": "-30%"},
-          {"indicator": "Public Health Index", "expected_change": "+40%"}
+          {"indicator": "basic_drinking_water_services", "expected_change": "+20%"},
+          {"indicator": "basic_sanitation_services", "expected_change": "+30%"},
+          {"indicator": "water_quality_index", "expected_change": "+15%"}
         ]
       },
       {
@@ -28,9 +28,9 @@
         "description": "Enhanced economic productivity through improved health and reduced healthcare costs",
         "category": "Economic",
         "affected_indicators": [
-          {"indicator": "Economic Productivity", "expected_change": "+25%"},
-          {"indicator": "Healthcare Cost Reduction", "expected_change": "-40%"},
-          {"indicator": "Work Days Saved", "expected_change": "+35%"}
+          {"indicator": "renewable_freshwater_per_capita", "expected_change": "+150"},
+          {"indicator": "food_production_value_usd_per_capita", "expected_change": "+20%"},
+          {"indicator": "protein_supply_grams_per_capita", "expected_change": "+10"}
         ]
       },
       {
@@ -38,20 +38,20 @@
         "description": "Reduced burden on women and girls for water collection, enabling education and economic participation",
         "category": "Social",
         "affected_indicators": [
-          {"indicator": "Girls School Attendance", "expected_change": "+45%"},
-          {"indicator": "Women Economic Participation", "expected_change": "+30%"},
-          {"indicator": "Time Saved for Women", "expected_change": "+60%"}
+          {"indicator": "basic_drinking_water_services", "expected_change": "+20%"},
+          {"indicator": "basic_sanitation_services", "expected_change": "+20%"},
+          {"indicator": "iwrm_implementation", "expected_change": "+10"}
         ]
       }
     ],
     "trade_offs": [
       {
-        "title": "High Infrastructure Costs",
-        "description": "Substantial capital investment required for comprehensive water infrastructure",
-        "category": "Economic",
+        "title": "Water Allocation Pressure",
+        "description": "Expanded water services can increase withdrawals and reduce environmental flows if not managed",
+        "category": "Water",
         "affected_indicators": [
-          {"indicator": "Infrastructure Investment", "expected_change": "+120%"},
-          {"indicator": "Government Expenditure", "expected_change": "+80%"}
+          {"indicator": "freshwater_withdrawals_percent", "expected_change": "+10%"},
+          {"indicator": "environmental_flow_requirements", "expected_change": "-5%"}
         ]
       },
       {
@@ -59,8 +59,8 @@
         "description": "Increased energy consumption for water treatment and distribution",
         "category": "Energy",
         "affected_indicators": [
-          {"indicator": "Energy Consumption", "expected_change": "+25%"},
-          {"indicator": "Carbon Footprint", "expected_change": "+15%"}
+          {"indicator": "electric_power_consumption", "expected_change": "+25%"},
+          {"indicator": "co2_emissions_per_capita", "expected_change": "+15%"}
         ]
       }
     ]
@@ -84,9 +84,9 @@
         "description": "Massive reduction in greenhouse gas emissions and fossil fuel dependence",
         "category": "Climate",
         "affected_indicators": [
-          {"indicator": "CO2 Emissions Reduction", "expected_change": "-60%"},
-          {"indicator": "Fossil Fuel Dependence", "expected_change": "-80%"},
-          {"indicator": "Carbon Footprint", "expected_change": "-55%"}
+          {"indicator": "co2_emissions_per_capita", "expected_change": "-60%"},
+          {"indicator": "renewable_energy_consumption", "expected_change": "+40%"},
+          {"indicator": "renewable_electricity_output", "expected_change": "+50%"}
         ]
       },
       {
@@ -94,9 +94,9 @@
         "description": "Enhanced energy independence and reduced vulnerability to fuel price fluctuations",
         "category": "Energy",
         "affected_indicators": [
-          {"indicator": "Energy Independence", "expected_change": "+85%"},
-          {"indicator": "Energy Price Stability", "expected_change": "+70%"},
-          {"indicator": "Grid Reliability", "expected_change": "+45%"}
+          {"indicator": "energy_imports_net_percent", "expected_change": "-70%"},
+          {"indicator": "electricity_access_percent", "expected_change": "+35%"},
+          {"indicator": "renewable_electricity_output", "expected_change": "+25%"}
         ]
       },
       {
@@ -104,9 +104,9 @@
         "description": "Creation of thousands of jobs in renewable energy sector and related industries",
         "category": "Economic",
         "affected_indicators": [
-          {"indicator": "Green Jobs Created", "expected_change": "+200%"},
-          {"indicator": "Employment Rate", "expected_change": "+25%"},
-          {"indicator": "Local Economic Growth", "expected_change": "+40%"}
+          {"indicator": "renewable_electricity_output", "expected_change": "+25%"},
+          {"indicator": "electricity_access_percent", "expected_change": "+10%"},
+          {"indicator": "energy_imports_net_percent", "expected_change": "-5%"}
         ]
       }
     ],
@@ -116,8 +116,8 @@
         "description": "Large land areas needed for solar and wind installations",
         "category": "Land",
         "affected_indicators": [
-          {"indicator": "Land Use for Energy", "expected_change": "+150%"},
-          {"indicator": "Agricultural Land Loss", "expected_change": "-20%"}
+          {"indicator": "protected_area_coverage", "expected_change": "-5%"},
+          {"indicator": "forest_coverage_percent", "expected_change": "-3%"}
         ]
       },
       {
@@ -125,8 +125,8 @@
         "description": "Extremely high upfront costs for renewable energy infrastructure",
         "category": "Economic",
         "affected_indicators": [
-          {"indicator": "Infrastructure Investment", "expected_change": "+300%"},
-          {"indicator": "Government Debt", "expected_change": "+60%"}
+          {"indicator": "electric_power_consumption", "expected_change": "+15%"},
+          {"indicator": "energy_imports_net_percent", "expected_change": "+10%"}
         ]
       }
     ]
@@ -150,9 +150,9 @@
         "description": "Increased and stable food production with improved nutritional quality",
         "category": "Food",
         "affected_indicators": [
-          {"indicator": "Food Production", "expected_change": "+40%"},
-          {"indicator": "Nutritional Quality", "expected_change": "+35%"},
-          {"indicator": "Food Security Index", "expected_change": "+50%"}
+          {"indicator": "cereal_yield_kg_per_hectare", "expected_change": "+25%"},
+          {"indicator": "dietary_energy_supply_adequacy", "expected_change": "+10%"},
+          {"indicator": "food_production_value_usd_per_capita", "expected_change": "+15%"}
         ]
       },
       {
@@ -160,9 +160,9 @@
         "description": "Enhanced biodiversity and reduced environmental degradation",
         "category": "Ecosystem",
         "affected_indicators": [
-          {"indicator": "Biodiversity Index", "expected_change": "+45%"},
-          {"indicator": "Soil Health", "expected_change": "+60%"},
-          {"indicator": "Water Quality", "expected_change": "+30%"}
+          {"indicator": "species_richness_index", "expected_change": "+12%"},
+          {"indicator": "soil_erosion_rate", "expected_change": "-20%"},
+          {"indicator": "water_quality_index", "expected_change": "+15%"}
         ]
       },
       {
@@ -170,9 +170,9 @@
         "description": "Improved agricultural resilience to climate change and extreme weather",
         "category": "Climate",
         "affected_indicators": [
-          {"indicator": "Drought Resistance", "expected_change": "+55%"},
-          {"indicator": "Climate Adaptation", "expected_change": "+40%"},
-          {"indicator": "Crop Yield Stability", "expected_change": "+65%"}
+          {"indicator": "carbon_sequestration_rate", "expected_change": "+20%"},
+          {"indicator": "pollination_services_index", "expected_change": "+18%"},
+          {"indicator": "water_quality_index", "expected_change": "+10%"}
         ]
       }
     ],
@@ -182,8 +182,8 @@
         "description": "High costs for farmer training, equipment, and initial yield reductions",
         "category": "Economic",
         "affected_indicators": [
-          {"indicator": "Farmer Investment", "expected_change": "+80%"},
-          {"indicator": "Training Costs", "expected_change": "+120%"}
+          {"indicator": "food_production_value_usd_per_capita", "expected_change": "-5%"},
+          {"indicator": "protein_supply_grams_per_capita", "expected_change": "-3"}
         ]
       },
       {
@@ -191,8 +191,8 @@
         "description": "Time required for farmers to adapt to new practices",
         "category": "Social",
         "affected_indicators": [
-          {"indicator": "Adoption Period", "expected_change": "+24 months"},
-          {"indicator": "Technical Support Needs", "expected_change": "+90%"}
+          {"indicator": "dietary_energy_supply_adequacy", "expected_change": "-1%"},
+          {"indicator": "protein_supply_grams_per_capita", "expected_change": "-2"}
         ]
       }
     ]
@@ -216,9 +216,9 @@
         "description": "Improved access to quality education through digital learning platforms",
         "category": "Education",
         "affected_indicators": [
-          {"indicator": "Digital Learning Access", "expected_change": "+200%"},
-          {"indicator": "Education Quality", "expected_change": "+45%"},
-          {"indicator": "Student Engagement", "expected_change": "+60%"}
+          {"indicator": "electricity_access_percent", "expected_change": "+20%"},
+          {"indicator": "renewable_electricity_output", "expected_change": "+15%"},
+          {"indicator": "energy_imports_net_percent", "expected_change": "-2%"}
         ]
       },
       {
@@ -226,9 +226,9 @@
         "description": "Enhanced economic opportunities through digital entrepreneurship and e-commerce",
         "category": "Economic",
         "affected_indicators": [
-          {"indicator": "Digital Economy Growth", "expected_change": "+150%"},
-          {"indicator": "Entrepreneurship Rate", "expected_change": "+80%"},
-          {"indicator": "E-commerce Adoption", "expected_change": "+200%"}
+          {"indicator": "electricity_access_percent", "expected_change": "+5%"},
+          {"indicator": "renewable_electricity_output", "expected_change": "+3%"},
+          {"indicator": "energy_imports_net_percent", "expected_change": "-2%"}
         ]
       },
       {
@@ -236,29 +236,29 @@
         "description": "Improved public service delivery and reduced bureaucratic inefficiencies",
         "category": "Governance",
         "affected_indicators": [
-          {"indicator": "Service Delivery Speed", "expected_change": "+70%"},
-          {"indicator": "Government Transparency", "expected_change": "+55%"},
-          {"indicator": "Citizen Satisfaction", "expected_change": "+65%"}
+          {"indicator": "water_quality_index", "expected_change": "+5%"},
+          {"indicator": "renewable_energy_consumption", "expected_change": "+10%"},
+          {"indicator": "electricity_access_percent", "expected_change": "+5%"}
         ]
       }
     ],
     "trade_offs": [
       {
-        "title": "Digital Divide",
-        "description": "Risk of exacerbating inequalities between digital haves and have-nots",
-        "category": "Social",
+        "title": "Operational Energy Overhead",
+        "description": "Higher electricity demand for networks, devices, and data centers",
+        "category": "Energy",
         "affected_indicators": [
-          {"indicator": "Digital Inequality", "expected_change": "+25%"},
-          {"indicator": "Access Gap", "expected_change": "+30%"}
+          {"indicator": "electric_power_consumption", "expected_change": "+6%"},
+          {"indicator": "co2_emissions_per_capita", "expected_change": "+3%"}
         ]
       },
       {
-        "title": "Cybersecurity Risks",
-        "description": "Increased vulnerability to cyber attacks and data breaches",
-        "category": "Security",
+        "title": "Network Infrastructure Load",
+        "description": "Additional power required to operate and maintain expanded digital infrastructure",
+        "category": "Energy",
         "affected_indicators": [
-          {"indicator": "Cyber Attack Risk", "expected_change": "+150%"},
-          {"indicator": "Data Privacy Concerns", "expected_change": "+200%"}
+          {"indicator": "electric_power_consumption", "expected_change": "+4%"},
+          {"indicator": "energy_imports_net_percent", "expected_change": "+2%"}
         ]
       }
     ]
@@ -282,9 +282,9 @@
         "description": "Significant carbon sequestration and urban heat island reduction",
         "category": "Climate",
         "affected_indicators": [
-          {"indicator": "Carbon Sequestration", "expected_change": "+180%"},
-          {"indicator": "Urban Temperature Reduction", "expected_change": "-8°C"},
-          {"indicator": "Air Quality Improvement", "expected_change": "+45%"}
+          {"indicator": "carbon_sequestration_rate", "expected_change": "+50%"},
+          {"indicator": "water_quality_index", "expected_change": "+10%"},
+          {"indicator": "soil_erosion_rate", "expected_change": "-15%"}
         ]
       },
       {
@@ -292,9 +292,9 @@
         "description": "Improved mental and physical health through access to green spaces",
         "category": "Health",
         "affected_indicators": [
-          {"indicator": "Mental Health Index", "expected_change": "+40%"},
-          {"indicator": "Physical Activity", "expected_change": "+55%"},
-          {"indicator": "Stress Reduction", "expected_change": "+65%"}
+          {"indicator": "basic_drinking_water_services", "expected_change": "+5%"},
+          {"indicator": "water_quality_index", "expected_change": "+10%"},
+          {"indicator": "basic_sanitation_services", "expected_change": "+5%"}
         ]
       },
       {
@@ -302,9 +302,9 @@
         "description": "Creation of urban wildlife corridors and habitat restoration",
         "category": "Ecosystem",
         "affected_indicators": [
-          {"indicator": "Urban Biodiversity", "expected_change": "+120%"},
-          {"indicator": "Species Richness", "expected_change": "+85%"},
-          {"indicator": "Habitat Connectivity", "expected_change": "+200%"}
+          {"indicator": "species_richness_index", "expected_change": "+20%"},
+          {"indicator": "protected_area_coverage", "expected_change": "+5%"},
+          {"indicator": "forest_coverage_percent", "expected_change": "+8%"}
         ]
       }
     ],
@@ -314,8 +314,8 @@
         "description": "Potential conflict with other urban development priorities",
         "category": "Land",
         "affected_indicators": [
-          {"indicator": "Development Space", "expected_change": "-25%"},
-          {"indicator": "Commercial Land", "expected_change": "-20%"}
+          {"indicator": "protected_area_coverage", "expected_change": "-2%"},
+          {"indicator": "forest_coverage_percent", "expected_change": "-1%"}
         ]
       },
       {
@@ -323,8 +323,8 @@
         "description": "Ongoing costs for green infrastructure maintenance and management",
         "category": "Economic",
         "affected_indicators": [
-          {"indicator": "Maintenance Costs", "expected_change": "+80%"},
-          {"indicator": "Management Staff", "expected_change": "+120%"}
+          {"indicator": "food_production_value_usd_per_capita", "expected_change": "-2%"},
+          {"indicator": "electric_power_consumption", "expected_change": "+2%"}
         ]
       }
     ]
@@ -348,9 +348,9 @@
         "description": "Dramatic reduction in resource consumption and waste generation",
         "category": "Resources",
         "affected_indicators": [
-          {"indicator": "Resource Consumption", "expected_change": "-45%"},
-          {"indicator": "Waste Generation", "expected_change": "-60%"},
-          {"indicator": "Material Efficiency", "expected_change": "+80%"}
+          {"indicator": "electric_power_consumption", "expected_change": "-10%"},
+          {"indicator": "water_quality_index", "expected_change": "+10%"},
+          {"indicator": "renewable_energy_consumption", "expected_change": "+10%"}
         ]
       },
       {
@@ -358,9 +358,9 @@
         "description": "New business models and economic opportunities in circular economy",
         "category": "Economic",
         "affected_indicators": [
-          {"indicator": "Circular Business Models", "expected_change": "+200%"},
-          {"indicator": "Innovation Rate", "expected_change": "+75%"},
-          {"indicator": "Job Creation", "expected_change": "+45%"}
+          {"indicator": "food_production_value_usd_per_capita", "expected_change": "+6%"},
+          {"indicator": "dietary_energy_supply_adequacy", "expected_change": "+3%"},
+          {"indicator": "renewable_electricity_output", "expected_change": "+5%"}
         ]
       },
       {
@@ -368,9 +368,9 @@
         "description": "Reduced pollution and environmental degradation through waste elimination",
         "category": "Ecosystem",
         "affected_indicators": [
-          {"indicator": "Pollution Reduction", "expected_change": "-55%"},
-          {"indicator": "Landfill Use", "expected_change": "-80%"},
-          {"indicator": "Environmental Health", "expected_change": "+65%"}
+          {"indicator": "water_quality_index", "expected_change": "+15%"},
+          {"indicator": "soil_erosion_rate", "expected_change": "-10%"},
+          {"indicator": "carbon_sequestration_rate", "expected_change": "+10%"}
         ]
       }
     ],
@@ -380,8 +380,8 @@
         "description": "High initial investment for new infrastructure and business model changes",
         "category": "Economic",
         "affected_indicators": [
-          {"indicator": "Infrastructure Investment", "expected_change": "+150%"},
-          {"indicator": "Business Transformation Costs", "expected_change": "+200%"}
+          {"indicator": "electric_power_consumption", "expected_change": "+5%"},
+          {"indicator": "energy_imports_net_percent", "expected_change": "+3%"}
         ]
       },
       {
@@ -389,8 +389,8 @@
         "description": "Time and effort required for consumer and business adoption",
         "category": "Social",
         "affected_indicators": [
-          {"indicator": "Adoption Period", "expected_change": "+36 months"},
-          {"indicator": "Education Requirements", "expected_change": "+180%"}
+          {"indicator": "dietary_energy_supply_adequacy", "expected_change": "-2%"},
+          {"indicator": "electricity_access_percent", "expected_change": "-4%"}
         ]
       }
     ]
@@ -414,9 +414,9 @@
         "description": "Significant recovery of marine ecosystems and species populations",
         "category": "Ecosystem",
         "affected_indicators": [
-          {"indicator": "Marine Biodiversity", "expected_change": "+150%"},
-          {"indicator": "Fish Stock Recovery", "expected_change": "+200%"},
-          {"indicator": "Coral Reef Health", "expected_change": "+85%"}
+          {"indicator": "species_richness_index", "expected_change": "+15%"},
+          {"indicator": "protected_area_coverage", "expected_change": "+10%"},
+          {"indicator": "water_quality_index", "expected_change": "+10%"}
         ]
       },
       {
@@ -424,9 +424,9 @@
         "description": "Long-term food security through sustainable fishing practices",
         "category": "Food",
         "affected_indicators": [
-          {"indicator": "Fishery Sustainability", "expected_change": "+180%"},
-          {"indicator": "Fish Production", "expected_change": "+45%"},
-          {"indicator": "Food Security", "expected_change": "+35%"}
+          {"indicator": "protein_supply_grams_per_capita", "expected_change": "+5"},
+          {"indicator": "food_production_value_usd_per_capita", "expected_change": "+6%"},
+          {"indicator": "dietary_energy_supply_adequacy", "expected_change": "+4%"}
         ]
       },
       {
@@ -434,9 +434,9 @@
         "description": "Development of sustainable ocean-based industries and tourism",
         "category": "Economic",
         "affected_indicators": [
-          {"indicator": "Marine Tourism", "expected_change": "+120%"},
-          {"indicator": "Blue Economy Jobs", "expected_change": "+150%"},
-          {"indicator": "Ocean Innovation", "expected_change": "+200%"}
+          {"indicator": "food_production_value_usd_per_capita", "expected_change": "+5%"},
+          {"indicator": "renewable_electricity_output", "expected_change": "+3%"},
+          {"indicator": "electric_power_consumption", "expected_change": "+2%"}
         ]
       }
     ],
@@ -446,8 +446,8 @@
         "description": "Temporary limitations on certain fishing and marine activities",
         "category": "Economic",
         "affected_indicators": [
-          {"indicator": "Fishing Restrictions", "expected_change": "+100%"},
-          {"indicator": "Marine Activity Limits", "expected_change": "+80%"}
+          {"indicator": "food_production_value_usd_per_capita", "expected_change": "-5%"},
+          {"indicator": "protein_supply_grams_per_capita", "expected_change": "-2"}
         ]
       },
       {
@@ -455,8 +455,8 @@
         "description": "Ongoing costs for monitoring and enforcement of marine protection",
         "category": "Economic",
         "affected_indicators": [
-          {"indicator": "Enforcement Costs", "expected_change": "+200%"},
-          {"indicator": "Monitoring Requirements", "expected_change": "+150%"}
+          {"indicator": "electric_power_consumption", "expected_change": "+3%"},
+          {"indicator": "energy_imports_net_percent", "expected_change": "+2%"}
         ]
       }
     ]
@@ -480,9 +480,9 @@
         "description": "Enhanced economic productivity through full participation of women",
         "category": "Economic",
         "affected_indicators": [
-          {"indicator": "GDP Growth", "expected_change": "+15%"},
-          {"indicator": "Labor Productivity", "expected_change": "+25%"},
-          {"indicator": "Innovation Rate", "expected_change": "+40%"}
+          {"indicator": "food_production_value_usd_per_capita", "expected_change": "+5%"},
+          {"indicator": "protein_supply_grams_per_capita", "expected_change": "+2"},
+          {"indicator": "dietary_energy_supply_adequacy", "expected_change": "+2%"}
         ]
       },
       {
@@ -490,9 +490,9 @@
         "description": "Improved educational outcomes for girls and women",
         "category": "Education",
         "affected_indicators": [
-          {"indicator": "Girls School Completion", "expected_change": "+85%"},
-          {"indicator": "Women Higher Education", "expected_change": "+120%"},
-          {"indicator": "Educational Equality", "expected_change": "+200%"}
+          {"indicator": "electricity_access_percent", "expected_change": "+5%"},
+          {"indicator": "renewable_electricity_output", "expected_change": "+3%"},
+          {"indicator": "electric_power_consumption", "expected_change": "+2%"}
         ]
       },
       {
@@ -500,29 +500,29 @@
         "description": "Enhanced social cohesion and reduced gender-based violence",
         "category": "Social",
         "affected_indicators": [
-          {"indicator": "Gender-Based Violence Reduction", "expected_change": "-70%"},
-          {"indicator": "Social Cohesion", "expected_change": "+45%"},
-          {"indicator": "Women Leadership", "expected_change": "+150%"}
+          {"indicator": "basic_drinking_water_services", "expected_change": "+2%"},
+          {"indicator": "basic_sanitation_services", "expected_change": "+2%"},
+          {"indicator": "iwrm_implementation", "expected_change": "+1"}
         ]
       }
     ],
     "trade_offs": [
       {
-        "title": "Cultural Resistance",
-        "description": "Potential resistance from traditional gender roles and cultural norms",
-        "category": "Social",
+        "title": "Household Energy Demand",
+        "description": "Improved access and empowerment can increase household energy usage",
+        "category": "Energy",
         "affected_indicators": [
-          {"indicator": "Cultural Resistance", "expected_change": "+60%"},
-          {"indicator": "Social Tension", "expected_change": "+25%"}
+          {"indicator": "electric_power_consumption", "expected_change": "+2%"},
+          {"indicator": "energy_imports_net_percent", "expected_change": "+1%"}
         ]
       },
       {
-        "title": "Implementation Time",
-        "description": "Long-term commitment required for cultural and behavioral change",
-        "category": "Social",
+        "title": "Mobility & Appliance Uptake",
+        "description": "Greater participation increases device use and mobility needs",
+        "category": "Energy",
         "affected_indicators": [
-          {"indicator": "Change Period", "expected_change": "+60 months"},
-          {"indicator": "Education Investment", "expected_change": "+180%"}
+          {"indicator": "co2_emissions_per_capita", "expected_change": "+1%"},
+          {"indicator": "electric_power_consumption", "expected_change": "+1%"}
         ]
       }
     ]
@@ -546,9 +546,9 @@
         "description": "Significant reduction in climate-related disaster impacts",
         "category": "Disaster",
         "affected_indicators": [
-          {"indicator": "Disaster Damage Reduction", "expected_change": "-80%"},
-          {"indicator": "Lives Saved", "expected_change": "+90%"},
-          {"indicator": "Infrastructure Protection", "expected_change": "+85%"}
+          {"indicator": "water_quality_index", "expected_change": "+10%"},
+          {"indicator": "renewable_electricity_output", "expected_change": "+5%"},
+          {"indicator": "electric_power_consumption", "expected_change": "-5%"}
         ]
       },
       {
@@ -556,9 +556,9 @@
         "description": "Enhanced ecosystem resilience and natural climate solutions",
         "category": "Ecosystem",
         "affected_indicators": [
-          {"indicator": "Ecosystem Resilience", "expected_change": "+150%"},
-          {"indicator": "Natural Climate Solutions", "expected_change": "+200%"},
-          {"indicator": "Biodiversity Adaptation", "expected_change": "+120%"}
+          {"indicator": "carbon_sequestration_rate", "expected_change": "+15%"},
+          {"indicator": "soil_erosion_rate", "expected_change": "-10%"},
+          {"indicator": "pollination_services_index", "expected_change": "+12%"}
         ]
       },
       {
@@ -566,9 +566,9 @@
         "description": "Strengthened community capacity to cope with climate impacts",
         "category": "Social",
         "affected_indicators": [
-          {"indicator": "Community Preparedness", "expected_change": "+180%"},
-          {"indicator": "Local Knowledge", "expected_change": "+150%"},
-          {"indicator": "Social Cohesion", "expected_change": "+65%"}
+          {"indicator": "basic_drinking_water_services", "expected_change": "+3%"},
+          {"indicator": "basic_sanitation_services", "expected_change": "+3%"},
+          {"indicator": "iwrm_implementation", "expected_change": "+1"}
         ]
       }
     ],
@@ -578,8 +578,8 @@
         "description": "Extremely high costs for comprehensive climate adaptation infrastructure",
         "category": "Economic",
         "affected_indicators": [
-          {"indicator": "Infrastructure Investment", "expected_change": "+400%"},
-          {"indicator": "Government Expenditure", "expected_change": "+250%"}
+          {"indicator": "electric_power_consumption", "expected_change": "+8%"},
+          {"indicator": "energy_imports_net_percent", "expected_change": "+4%"}
         ]
       },
       {
@@ -587,8 +587,8 @@
         "description": "Extended time required for full climate adaptation implementation",
         "category": "Time",
         "affected_indicators": [
-          {"indicator": "Implementation Period", "expected_change": "+72 months"},
-          {"indicator": "Planning Requirements", "expected_change": "+200%"}
+          {"indicator": "undernourishment_prevalence", "expected_change": "+1%"},
+          {"indicator": "electric_power_consumption", "expected_change": "+1%"}
         ]
       }
     ]
@@ -612,9 +612,9 @@
         "description": "Dramatic improvement in population health outcomes and life expectancy",
         "category": "Health",
         "affected_indicators": [
-          {"indicator": "Life Expectancy", "expected_change": "+15%"},
-          {"indicator": "Infant Mortality Reduction", "expected_change": "-70%"},
-          {"indicator": "Disease Prevention", "expected_change": "+200%"}
+          {"indicator": "basic_drinking_water_services", "expected_change": "+5%"},
+          {"indicator": "basic_sanitation_services", "expected_change": "+5%"},
+          {"indicator": "electricity_access_percent", "expected_change": "+3%"}
         ]
       },
       {
@@ -622,9 +622,9 @@
         "description": "Enhanced economic output through improved workforce health",
         "category": "Economic",
         "affected_indicators": [
-          {"indicator": "Workforce Productivity", "expected_change": "+35%"},
-          {"indicator": "Sick Days Reduction", "expected_change": "-60%"},
-          {"indicator": "Economic Growth", "expected_change": "+20%"}
+          {"indicator": "food_production_value_usd_per_capita", "expected_change": "+2%"},
+          {"indicator": "electricity_access_percent", "expected_change": "+3%"},
+          {"indicator": "renewable_electricity_output", "expected_change": "+2%"}
         ]
       },
       {
@@ -632,9 +632,9 @@
         "description": "Reduced health inequalities and improved access for vulnerable populations",
         "category": "Social",
         "affected_indicators": [
-          {"indicator": "Health Equity", "expected_change": "+180%"},
-          {"indicator": "Access for Vulnerable Groups", "expected_change": "+250%"},
-          {"indicator": "Social Inclusion", "expected_change": "+120%"}
+          {"indicator": "basic_drinking_water_services", "expected_change": "+2%"},
+          {"indicator": "basic_sanitation_services", "expected_change": "+2%"},
+          {"indicator": "iwrm_implementation", "expected_change": "+1"}
         ]
       }
     ],
@@ -644,8 +644,8 @@
         "description": "Massive investment required for comprehensive healthcare infrastructure",
         "category": "Economic",
         "affected_indicators": [
-          {"indicator": "Healthcare Investment", "expected_change": "+500%"},
-          {"indicator": "Government Budget Impact", "expected_change": "+300%"}
+          {"indicator": "electric_power_consumption", "expected_change": "+10%"},
+          {"indicator": "energy_imports_net_percent", "expected_change": "+5%"}
         ]
       },
       {
@@ -653,8 +653,8 @@
         "description": "Extended period required for full healthcare system transformation",
         "category": "Time",
         "affected_indicators": [
-          {"indicator": "Implementation Period", "expected_change": "+84 months"},
-          {"indicator": "System Integration Time", "expected_change": "+120%"}
+          {"indicator": "iwrm_implementation", "expected_change": "+1"},
+          {"indicator": "electricity_access_percent", "expected_change": "+2%"}
         ]
       }
     ]

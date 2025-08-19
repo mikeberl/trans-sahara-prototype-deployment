@@ -162,8 +162,6 @@ def render_wefe_pillars_view(lab_info):
                         """,
                         unsafe_allow_html=True
                     )
-                st.divider()
-                st.write(f"**Rank:** {data.get('rank', '-')}")
                 indicators = data.get("indicators", {})
                 for subpillar, subdata in indicators.items():
                     st.divider()

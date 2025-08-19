@@ -8,7 +8,7 @@ from interventions import INTERVENTIONS
 
 def load_living_labs():
     """Load living labs data from JSON file"""
-    with open("livinglab.json", "r", encoding="utf-8") as f:
+    with open("assets/data/livinglab.json", "r", encoding="utf-8") as f:
         return json.load(f)
 
 def get_regions_from_labs(livinglabs):
@@ -50,17 +50,6 @@ def run_policy_simulation():
         for i in st.session_state.policy_suggestions[p]
     })
 
-def get_detailed_scores():
-    """Get detailed scores for each WEFE pillar"""
-    return {
-        "Water": {"icon": "💧", "Access": {"Drinking Water Access (%)": 97.5, "Sanitation Access (%)": 80.8, "IWRM Implementation (1–100)": 60},
-                  "Availability": {"Freshwater Withdrawal (% resources)": 92.1, "Renewable Water per Capita (m³)": 344.9, "Environmental Flow (10⁶ m³/yr)": 2.2, "Avg Precipitation (mm/yr)": 207}},
-        "Energy": {"icon": "⚡", "Access": {"Electricity Access (%)": 99.9, "Renewable Energy Consumption (%)": 12.9, "Renewable Electricity Output (%)": 2.8, "CO₂ Emissions (t/capita)": 2.4},
-                  "Availability": {"Power Consumption (kWh/capita)": 1408.1, "Net Energy Imports (%)": 36.2}},
-        "Food": {"icon": "🌾", "Access": {"Undernourishment (%)": 3.1, "Wasting (children <5) (%)": 2.1, "Stunting (children <5) (%)": 8.6, "Adult Obesity (%)": 26.9},
-                 "Availability": {"Protein Supply (g/capita/day)": 99.7, "Cereal Yield (kg/ha)": 1453.8, "Dietary Energy Adequacy (%)": 148}},
-        "Ecosystem": {"icon": "🌿", "Health": {"Biodiversity Index (simulated)": 65.0, "Land Degradation Rate (%)": 12.4, "Protected Areas (% land)": 14.8}}
-    }
 
 def get_map_data():
     """Get default map data for Tunisia"""
