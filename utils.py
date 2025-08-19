@@ -8,7 +8,7 @@ from interventions import INTERVENTIONS
 
 def load_living_labs():
     """Load living labs data from JSON file"""
-    with open("assets/data/livinglab.json", "r", encoding="utf-8") as f:
+    with open("data/livinglab.json", "r", encoding="utf-8") as f:
         return json.load(f)
 
 def get_regions_from_labs(livinglabs):

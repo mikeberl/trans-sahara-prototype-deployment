@@ -25,7 +25,7 @@ if not st.session_state.session_started:
     st.sidebar.header("1. Select Living Lab and Impact Weights")
 
     # Load living labs from JSON
-    with open("assets/data/livinglab.json", "r", encoding="utf-8") as f:
+    with open("data/livinglab.json", "r", encoding="utf-8") as f:
         livinglabs = json.load(f)
     regions = [lab["name"] for lab in livinglabs]
     selected_lab = st.sidebar.selectbox("Select a Living Lab", regions, key="select_lab")
