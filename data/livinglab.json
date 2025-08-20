@@ -9,20 +9,13 @@
     },
     "country": "Ghana",
     "description": "Living lab focused on WEFE solutions for the northern region of Ghana, addressing water scarcity and agricultural challenges in semi-arid conditions.",
-    "contacts": [
-      {
-        "name": "Dr. Kwame Mensah",
-        "institution": "University of Ghana",
-        "email": "k.mensah@ug.edu.gh",
-        "phone": "+233 20 1234567"
-      },
-      {
-        "name": "Prof. Ama Osei",
-        "institution": "CSIR-Water Research Institute",
-        "email": "a.osei@csir-wri.org.gh",
-        "phone": "+233 24 2345678"
-      }
-    ],
+    "surface_m3": 1500000,
+    "land_use_surfaces_m3": {
+      "residential": 400000,
+      "mixed": 500000,
+      "green": 500000,
+      "water": 100000
+    },
     "wefe_pillars": {
       "water": {
         "score": 52.3,
@@ -113,20 +106,13 @@
     },
     "country": "Ethiopia",
     "description": "Living lab for agricultural innovation and resource management in the Ethiopian highlands, focusing on sustainable farming practices and water conservation.",
-    "contacts": [
-      {
-        "name": "Dr. Abebe Bekele",
-        "institution": "Addis Ababa University",
-        "email": "a.bekele@aau.edu.et",
-        "phone": "+251 11 1234567"
-      },
-      {
-        "name": "Dr. Tigist Mekonnen",
-        "institution": "Ethiopian Institute of Agricultural Research",
-        "email": "t.mekonnen@eiar.gov.et",
-        "phone": "+251 91 2345678"
-      }
-    ],
+    "surface_m3": 1200000,
+    "land_use_surfaces_m3": {
+      "residential": 300000,
+      "mixed": 400000,
+      "green": 400000,
+      "water": 100000
+    },
     "wefe_pillars": {
       "water": {
         "score": 48.7,
@@ -217,20 +203,13 @@
     },
     "country": "Tunisia",
     "description": "Living lab for environmental sustainability in the Tunis region, addressing water scarcity and renewable energy integration in arid climate conditions.",
-    "contacts": [
-      {
-        "name": "Dr. Samir Ben Salem",
-        "institution": "National Institute of Agronomy of Tunisia",
-        "email": "s.bensalem@inat.agrinet.tn",
-        "phone": "+216 71 123456"
-      },
-      {
-        "name": "Prof. Leila Ben Hassen",
-        "institution": "University of Tunis El Manar",
-        "email": "l.benhassen@utm.tn",
-        "phone": "+216 98 234567"
-      }
-    ],
+    "surface_m3": 900000,
+    "land_use_surfaces_m3": {
+      "residential": 350000,
+      "mixed": 300000,
+      "green": 200000,
+      "water": 50000
+    },
     "wefe_pillars": {
       "water": {
         "score": 41.2,
@@ -321,20 +300,13 @@
     },
     "country": "Burkina Faso",
     "description": "Living lab for integrated resource management in Burkina Faso, focusing on sustainable agriculture and water management in semi-arid Sahelian conditions.",
-    "contacts": [
-      {
-        "name": "Dr. Oumarou Ouédraogo",
-        "institution": "University of Ouagadougou",
-        "email": "o.ouedraogo@univ-ouaga.bf",
-        "phone": "+226 25 123456"
-      },
-      {
-        "name": "Dr. Fatimata Ouattara",
-        "institution": "Institut de l'Environnement et de Recherches Agricoles",
-        "email": "f.ouattara@inera.bf",
-        "phone": "+226 70 234567"
-      }
-    ],
+    "surface_m3": 1100000,
+    "land_use_surfaces_m3": {
+      "residential": 250000,
+      "mixed": 300000,
+      "green": 450000,
+      "water": 100000
+    },
     "wefe_pillars": {
       "water": {
         "score": 45.8,

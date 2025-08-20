@@ -2,6 +2,7 @@ import base64
 import streamlit as st
 import folium
 from folium import plugins
+import pandas as pd
 from utils import load_living_labs, get_regions_from_labs
 
 def create_living_labs_map(selected_lab=None):
@@ -177,6 +178,9 @@ def render_welcome_page():
                 st.markdown(f"**Country:** {lab_info['country']}")
                 st.markdown(f"**Climate Type:** {lab_info['climate_type']}")
                 st.markdown(f"**Description:** {lab_info['description']}")
+                # Total surface information
+                if 'surface_m3' in lab_info:
+                    st.markdown(f"**Total Surface:** {lab_info['surface_m3']} m³")
                 
                 if 'challenges' in lab_info and lab_info['challenges']:
                     with st.expander("⚠️ Main Challenges", expanded=False):
@@ -184,13 +188,24 @@ def render_welcome_page():
                         for i, challenge in enumerate(lab_info['challenges'], 1):
                             st.markdown(f"- {challenge}")
                 
-                with st.expander("📞 Contact Information", expanded=False):
-                    for contact in lab_info['contacts']:
-                        st.markdown(f"- **{contact['name']}**")
-                        st.markdown(f"  {contact['institution']}")
-                        st.markdown(f"  📧 {contact['email']}")
-                        st.markdown(f"  📞 {contact['phone']}")
-                        st.markdown("")                
+                # Land use surfaces table (replaces contacts section, no expander)
+                land_use = lab_info.get('land_use_surfaces_m3', {})
+                if land_use:
+                    total_surface = lab_info.get('surface_m3') or sum(land_use.values())
+                    table_rows = [
+                        {"Land Use": "Residential", "Surface (m³)": land_use.get("residential", 0)},
+                        {"Land Use": "Mixed", "Surface (m³)": land_use.get("mixed", 0)},
+                        {"Land Use": "Green", "Surface (m³)": land_use.get("green", 0)},
+                        {"Land Use": "Water", "Surface (m³)": land_use.get("water", 0)},
+                    ]
+                    df_land_use = pd.DataFrame(table_rows)
+                    if total_surface and total_surface > 0:
+                        df_land_use["Share (%)"] = (df_land_use["Surface (m³)"] / float(total_surface) * 100).round(1)
+                    else:
+                        df_land_use["Share (%)"] = 0.0
+                    st.markdown("**Land Use Surfaces**")
+                    st.table(df_land_use)
+                
             else:
                 lab_info = None
         else:
