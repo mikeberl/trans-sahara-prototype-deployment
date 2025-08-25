@@ -360,5 +360,83 @@ def calculate_overall_wefe_score(lab_data, weights=None):
         "number_of_included_pillars": len(included_pillars)
     }
     
-    return overall_score, breakdown 
+    return overall_score, breakdown
+
+def get_indicator_units():
+    """
+    Extract units for all indicators from pillars.json
+    
+    Returns:
+        Dictionary mapping indicator names to their units
+    """
+    pillars_definitions = load_pillars_definitions()
+    units_dict = {}
+    
+    if not pillars_definitions or 'wefe_pillars' not in pillars_definitions:
+        return units_dict
+    
+    # Extract units from all pillars and categories
+    for pillar_key, pillar_data in pillars_definitions['wefe_pillars'].items():
+        categories = pillar_data.get('categories', {})
+        for category_key, category_data in categories.items():
+            indicators = category_data.get('indicators', {})
+            for indicator_key, indicator_data in indicators.items():
+                unit = indicator_data.get('unit', '')
+                units_dict[indicator_key] = unit
+    
+    return units_dict
+
+def format_indicator_with_unit(indicator_name, value, units_dict=None):
+    """
+    Format an indicator value with its appropriate unit
+    
+    Args:
+        indicator_name: The indicator key name
+        value: The indicator value
+        units_dict: Dictionary of indicator units (if None, will load from pillars.json)
+    
+    Returns:
+        Formatted string with value and unit
+    """
+    if value is None:
+        return "-"
+    
+    if units_dict is None:
+        units_dict = get_indicator_units()
+    
+    unit = units_dict.get(indicator_name, "")
+    
+    # Format based on unit type
+    if unit == "percentage":
+        return f"{value}%"
+    elif unit == "cubic meters per capita per year":
+        return f"{value} m³/capita/year"
+    elif unit == "millimeters per year":
+        return f"{value} mm/year"
+    elif unit == "kilowatt hours per capita per year":
+        return f"{value} kWh/capita/year"
+    elif unit == "metric tons CO2 per capita per year":
+        return f"{value} tCO₂/capita/year"
+    elif unit == "grams per capita per day":
+        return f"{value} g/capita/day"
+    elif unit == "kilograms per hectare":
+        return f"{value} kg/ha"
+    elif unit == "USD per capita per year":
+        return f"${value}/capita/year"
+    elif unit == "metric tons CO2 equivalent per hectare per year":
+        return f"{value} tCO₂eq/ha/year"
+    elif unit == "metric tons per hectare per year":
+        return f"{value} t/ha/year"
+    elif unit == "index (0-1)":
+        return f"{value}"
+    elif unit == "score (0-100)":
+        return f"{value}"
+    elif unit == "count":
+        return f"{value}"
+    elif unit and unit != "":
+        # Generic case - just append the unit
+        return f"{value} {unit}"
+    else:
+        # No unit information available
+        return f"{value}" 
     

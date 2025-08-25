@@ -3,7 +3,7 @@ import streamlit as st
 import folium
 from folium import plugins
 import pandas as pd
-from utils import load_living_labs, get_regions_from_labs, PILLARS, calculate_all_pillar_scores, calculate_overall_wefe_score
+from utils import load_living_labs, get_regions_from_labs, PILLARS, calculate_all_pillar_scores, calculate_overall_wefe_score, get_indicator_units, format_indicator_with_unit
 
 def create_living_labs_map(selected_lab=None):
     """Create an interactive map showing all living lab areas as squares"""
@@ -112,6 +112,9 @@ def render_wefe_pillars_view(lab_info):
     
     # Calculate all pillar scores using the new formula-based approach
     calculated_scores = calculate_all_pillar_scores(lab_info)
+    
+    # Get units dictionary for all indicators
+    units_dict = get_indicator_units()
 
     cols = st.columns(4)
     for i, pillar in enumerate(pillars):
@@ -143,7 +146,9 @@ def render_wefe_pillars_view(lab_info):
                     st.divider()
                     st.markdown(f"**{subpillar.capitalize()}**")
                     for ind_name, ind_value in subdata.items():
-                        st.write(f"{ind_name.replace('_', ' ').capitalize()}: {ind_value}")
+                        # Format indicator value with unit
+                        formatted_value = format_indicator_with_unit(ind_name, ind_value, units_dict)
+                        st.write(f"{ind_name.replace('_', ' ').capitalize()}: {formatted_value}")
 
 def render_overall_wefe_score(lab_info):
     """Render the overall WEFE Nexus score container"""
