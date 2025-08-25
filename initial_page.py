@@ -4,6 +4,7 @@ import folium
 from folium import plugins
 import pandas as pd
 from utils import load_living_labs, get_regions_from_labs, PILLARS, calculate_all_pillar_scores, calculate_overall_wefe_score, get_indicator_units, format_indicator_with_unit
+import streamviz
 
 def create_living_labs_map(selected_lab=None):
     """Create an interactive map showing all living lab areas as squares"""
@@ -168,7 +169,7 @@ def render_overall_wefe_score(lab_info):
         # Create the main container
         with st.container(border=True):
             # Header row
-            col1, col2 = st.columns([3, 1])
+            col1, col2 = st.columns([3, 2])
             
             with col1:
                 st.markdown(
@@ -183,7 +184,8 @@ def render_overall_wefe_score(lab_info):
                     """,
                     unsafe_allow_html=True
                 )
-            
+            # with col2:
+                # streamviz.gauge(overall_score / 100, gSize="SML", sFix="%", gcHigh="#f39c12", gcLow="#e74c3c", gcMid="#27ae60")
             with col2:
                 # Overall score display
                 score_color = "#27ae60" if overall_score >= 70 else "#f39c12" if overall_score >= 50 else "#e74c3c"
