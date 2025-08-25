@@ -3,7 +3,7 @@ import streamlit as st
 import folium
 from folium import plugins
 import pandas as pd
-from utils import load_living_labs, get_regions_from_labs, PILLARS
+from utils import load_living_labs, get_regions_from_labs, PILLARS, calculate_all_pillar_scores, calculate_overall_wefe_score
 
 def create_living_labs_map(selected_lab=None):
     """Create an interactive map showing all living lab areas as squares"""
@@ -74,10 +74,15 @@ def render_sidebar_welcome_page():
     
     # WEFE weights settings
     with st.sidebar.expander("WEFE weights settings", expanded=False):
-        water_w = st.slider("Water Availability", 0, 5, 3, key="water_weight")
-        energy_w = st.slider("Energy Demand", 0, 5, 3, key="energy_weight")
-        food_w = st.slider("Agricultural Production", 0, 5, 3, key="food_weight")
-        eco_w = st.slider("Ecosystem Health", 0, 5, 3, key="eco_weight")
+        water_w = st.slider("Water", 0, 5, 3, key="water_weight")
+        energy_w = st.slider("Energy", 0, 5, 3, key="energy_weight")
+        food_w = st.slider("Food", 0, 5, 3, key="food_weight")
+        eco_w = st.slider("Ecosystems", 0, 5, 3, key="eco_weight")
+    
+    # Store current weights in session state immediately (not just when session starts)
+    st.session_state.policy_weights = {
+        "Water": water_w, "Energy": energy_w, "Food": food_w, "Ecosystem": eco_w
+    }
 
     # Session parameters settings 
     with st.sidebar.expander("Session parameters settings", expanded=False):
@@ -94,9 +99,7 @@ def render_sidebar_welcome_page():
     if st.sidebar.button("Start Session", key="start_session"):
         st.session_state.session_started = True
         st.session_state.selected_lab = selected_lab
-        st.session_state.policy_weights = {
-            "Water": water_w, "Energy": energy_w, "Food": food_w, "Ecosystem": eco_w
-        }
+        # Weights are already stored above, no need to set them again here
         st.rerun()
 
 def render_wefe_pillars_view(lab_info):
@@ -106,10 +109,17 @@ def render_wefe_pillars_view(lab_info):
         return
 
     pillars = PILLARS
+    
+    # Calculate all pillar scores using the new formula-based approach
+    calculated_scores = calculate_all_pillar_scores(lab_info)
 
     cols = st.columns(4)
     for i, pillar in enumerate(pillars):
         data = lab_info['wefe_pillars'].get(pillar["key"], {})
+        
+        # Use calculated score instead of raw score
+        calculated_score = calculated_scores.get(pillar["key"])
+        score_display = f"{calculated_score}" if calculated_score is not None else "-"
         
         with cols[i]:
             with st.container(border=True):
@@ -122,7 +132,7 @@ def render_wefe_pillars_view(lab_info):
                         <div style='display: flex; justify-content: flex-end; align-items: center;'>
                             <div>
                                 <span style='font-size: 0.9rem; color: #888;'>Score</span><br>
-                                <span style='font-size: 1.5rem; font-weight: bold;'>{data.get("score", "-")}</span>
+                                <span style='font-size: 1.5rem; font-weight: bold;'>{score_display}</span>
                             </div>
                         </div>
                         """,
@@ -134,6 +144,55 @@ def render_wefe_pillars_view(lab_info):
                     st.markdown(f"**{subpillar.capitalize()}**")
                     for ind_name, ind_value in subdata.items():
                         st.write(f"{ind_name.replace('_', ' ').capitalize()}: {ind_value}")
+
+def render_overall_wefe_score(lab_info):
+    """Render the overall WEFE Nexus score container"""
+    if not lab_info or 'wefe_pillars' not in lab_info:
+        return
+    
+    # Get weights from session state (from sidebar settings)
+    # These should always be available now since they're set in the sidebar function
+    weights = st.session_state.get('policy_weights', {
+        "Water": 3, "Energy": 3, "Food": 3, "Ecosystem": 3
+    })
+    
+    # Calculate overall WEFE score
+    overall_score, breakdown = calculate_overall_wefe_score(lab_info, weights)
+    
+    if overall_score is not None:
+        # Create the main container
+        with st.container(border=True):
+            # Header row
+            col1, col2 = st.columns([3, 1])
+            
+            with col1:
+                st.markdown(
+                    """
+                    <div style='display: flex; align-items: center; margin-bottom: 10px;'>
+                        <span style='font-size: 2rem; margin-right: 15px;'>🌍</span>
+                        <div>
+                            <h2 style='margin: 0; color: #2E86AB; font-size: 1.8rem;'>WEFE NEXUS Evaluation</h2>
+                            <p style='margin: 0; color: #666; font-size: 0.9rem;'>Overall sustainability score based on weighted pillar assessment</p>
+                        </div>
+                    </div>
+                    """,
+                    unsafe_allow_html=True
+                )
+            
+            with col2:
+                # Overall score display
+                score_color = "#27ae60" if overall_score >= 70 else "#f39c12" if overall_score >= 50 else "#e74c3c"
+                st.markdown(
+                    f"""
+                    <div style='text-align: center; padding: 10px; background-color: {score_color}; border-radius: 10px; color: white;'>
+                        <div style='font-size: 0.9rem; font-weight: 500;'>Overall Score</div>
+                        <div style='font-size: 2.5rem; font-weight: bold; line-height: 1;'>{overall_score}</div>
+                        <div style='font-size: 0.8rem; opacity: 0.9;'>/ 100</div>
+                    </div>
+                    """,
+                    unsafe_allow_html=True
+                )
+    
 
 def render_welcome_page():
     """Render the welcome page when session hasn't started"""
@@ -186,7 +245,14 @@ def render_welcome_page():
             st.subheader("Living Lab Information")
             st.info("Select a living lab from the sidebar to view its details.")
             lab_info = None
-            
+    
+    # Render overall WEFE score container
+    render_overall_wefe_score(lab_info)
+    
+    # Add some spacing
+    st.markdown("---")
+    
+    # Render individual pillar cards        
     render_wefe_pillars_view(lab_info) 
     
     

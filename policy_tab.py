@@ -4,7 +4,7 @@ import pandas as pd
 from typing import Dict, List, Any
 import plotly.graph_objects as go
 from initial_page import get_selected_lab_info
-from utils import PILLARS
+from utils import PILLARS, calculate_all_pillar_scores
 import os
 
 # Load policies data
@@ -230,7 +230,10 @@ def render_policy_tab():
         if lab_info and 'wefe_pillars' in lab_info:
             categories = [pillar["label"] for pillar in PILLARS]
             pillar_keys = [pillar["key"] for pillar in PILLARS]
-            values = [lab_info['wefe_pillars'].get(k, {}).get('score', 0) for k in pillar_keys]
+            
+            # Use calculated scores instead of raw scores
+            calculated_scores = calculate_all_pillar_scores(lab_info)
+            values = [calculated_scores.get(k, 0) for k in pillar_keys]
 
             # Build scenario values (initially equal to base values)
             scenario_values = values.copy()
