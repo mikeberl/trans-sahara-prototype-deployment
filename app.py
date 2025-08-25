@@ -53,21 +53,6 @@ if not st.session_state.session_started:
 
 
 if st.session_state.session_started:
-    with st.expander("🎛️ WEFE Weight Settings", expanded=False):
-        col1, col2, col3, col4 = st.columns(4)
-        with col1:
-            water_w = st.slider("Water", 0, 5, st.session_state.get('policy_weights', {}).get('Water', 3), key="water_weight_session")
-        with col2:
-            energy_w = st.slider("Energy", 0, 5, st.session_state.get('policy_weights', {}).get('Energy', 3), key="energy_weight_session")
-        with col3:
-            food_w = st.slider("Food", 0, 5, st.session_state.get('policy_weights', {}).get('Food', 3), key="food_weight_session")
-        with col4:
-            eco_w = st.slider("Ecosystems", 0, 5, st.session_state.get('policy_weights', {}).get('Ecosystem', 3), key="eco_weight_session")
-        
-        st.session_state.policy_weights = {
-            "Water": water_w, "Energy": energy_w, "Food": food_w, "Ecosystem": eco_w
-        }
-    
     tabs = st.tabs(["Policy View", "Intervention View"])
     with tabs[0]:
         render_policy_tab()
