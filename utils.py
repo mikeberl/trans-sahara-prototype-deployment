@@ -47,20 +47,6 @@ def get_map_data():
     """Get default map data for Tunisia"""
     return pd.DataFrame({"lat": [34.8], "lon": [10.1]})
 
-def calculate_overall_score(policy_scores):
-    """Calculate overall WEFE policy score"""
-    return round(np.mean(list(policy_scores.values())), 1)
-
-def get_available_policies():
-    """Get list of policies not yet selected"""
-    return [p for p in POLICY_DETAILS if p not in st.session_state.selected_policies]
-
-def add_policy_to_session(policy_name):
-    """Add a new policy to the session state"""
-    st.session_state.selected_policies.append(policy_name)
-    st.session_state.policy_inputs[policy_name] = {"intensity": 50, "year": 2030}
-    st.session_state.policy_suggestions[policy_name] = random.sample(INTERVENTIONS, 3)
-    
 def load_policies():
     try:
         json_path = os.path.join(os.path.dirname(__file__), 'data', 'policies.json')

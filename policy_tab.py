@@ -31,27 +31,6 @@ def get_policies_by_category(policies: List[Dict], category: str) -> List[Dict]:
     """Get policies filtered by category"""
     return [policy for policy in policies if policy.get('policy_type') == category]
 
-def get_category_color(category: str) -> str:
-    """Get color for WEFE category"""
-    colors = {
-        'Water': '#3498db',      # Blue
-        'Energy': '#f39c12',     # Orange
-        'Food': '#27ae60',       # Green
-        'Ecosystem': '#8e44ad',  # Purple
-        'Economic': '#e74c3c',   # Red
-        'Social': '#95a5a6'      # Gray
-    }
-    return colors.get(category, '#34495e')  # Default dark blue
-
-def get_policy_type_color(policy_type: str) -> str:
-    """Get display color for a policy type/category"""
-    type_colors = {
-        'WEFE': '#2c3e50',        # Dark blue
-        'Agroforestry': '#27ae60',# Green
-        'Others': '#7f8c8d'       # Gray
-    }
-    return type_colors.get(policy_type, '#34495e')
-
 def load_pillars_definitions():
     """Load pillars definitions from JSON file"""
     try:
