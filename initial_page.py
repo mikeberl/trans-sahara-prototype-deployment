@@ -88,8 +88,7 @@ def render_sidebar_welcome_page():
     # Session parameters settings 
     with st.sidebar.expander("Session parameters settings", expanded=False):
         budget = st.number_input("Budget (Million USD)", 0, 1000, 10, 1, key="budget")
-        time_range = st.number_input("Simulation Year", 2030, 2100, 2030, 5, key="sim_year")
-        time_interval = st.number_input("Interval (years)", 1, 20, 5, 1, key="interval")
+        time_range = st.number_input("End of simulation", 2030, 2100, 2030, 5, key="sim_year")
 
     # Scenario definition settings
     with st.sidebar.expander("Scenario definition", expanded=False):
@@ -110,18 +109,13 @@ def render_wefe_pillars_view(lab_info):
         return
 
     pillars = PILLARS
-    
-    # Calculate all pillar scores using the new formula-based approach
     calculated_scores = calculate_all_pillar_scores(lab_info)
-    
-    # Get units dictionary for all indicators
     units_dict = get_indicator_units()
 
     cols = st.columns(4)
     for i, pillar in enumerate(pillars):
         data = lab_info['wefe_pillars'].get(pillar["key"], {})
         
-        # Use calculated score instead of raw score
         calculated_score = calculated_scores.get(pillar["key"])
         score_display = f"{calculated_score}" if calculated_score is not None else "-"
         
@@ -147,7 +141,6 @@ def render_wefe_pillars_view(lab_info):
                     st.divider()
                     st.markdown(f"**{subpillar.capitalize()}**")
                     for ind_name, ind_value in subdata.items():
-                        # Format indicator value with unit
                         formatted_value = format_indicator_with_unit(ind_name, ind_value, units_dict)
                         st.write(f"{ind_name.replace('_', ' ').capitalize()}: {formatted_value}")
 
@@ -240,11 +233,13 @@ def render_welcome_page():
                     ]
                     df_land_use = pd.DataFrame(table_rows)
                     if total_surface and total_surface > 0:
-                        df_land_use["Share (%)"] = (df_land_use["Surface (m³)"] / float(total_surface) * 100).round(1)
+                        df_land_use["Share (%)"] = (df_land_use["Surface (m³)"] / float(total_surface) * 100)
                     else:
                         df_land_use["Share (%)"] = 0.0
+                    
+                    styled_df = df_land_use.style.format({"Share (%)": "{:.1f} %"})
                     st.markdown("**Land Use Surfaces**")
-                    st.table(df_land_use)
+                    st.dataframe(styled_df, use_container_width=True)
                 
             else:
                 lab_info = None
@@ -253,13 +248,7 @@ def render_welcome_page():
             st.info("Select a living lab from the sidebar to view its details.")
             lab_info = None
     
-    # Render overall WEFE score container
     render_overall_wefe_score(lab_info)
-    
-    # Add some spacing
-    st.markdown("---")
-    
-    # Render individual pillar cards        
     render_wefe_pillars_view(lab_info) 
     
     

@@ -3,8 +3,10 @@ import json
 import pandas as pd
 from typing import Dict, List, Any
 import plotly.graph_objects as go
+import plotly.express as px
+import numpy as np
 from initial_page import get_selected_lab_info
-from utils import PILLARS, calculate_all_pillar_scores
+from utils import PILLARS, calculate_all_pillar_scores, normalize_indicator, get_indicators_to_invert
 import os
 
 # Load policies data
@@ -49,6 +51,225 @@ def get_policy_type_color(policy_type: str) -> str:
         'Others': '#7f8c8d'       # Gray
     }
     return type_colors.get(policy_type, '#34495e')
+
+def load_pillars_definitions():
+    """Load pillars definitions from JSON file"""
+    try:
+        with open(os.path.join(os.path.dirname(__file__), 'data', 'pillars.json'), 'r') as f:
+            return json.load(f)
+    except FileNotFoundError:
+        st.error("Pillars definitions file not found!")
+        return {}
+
+def create_wefe_radar_plot(lab_info, selected_lab_name):
+    """Create a radar plot showing WEFE pillar scores with policy scenario overlay"""
+    if not lab_info or 'wefe_pillars' not in lab_info:
+        return None
+    
+    categories = [pillar["label"] for pillar in PILLARS]
+    pillar_keys = [pillar["key"] for pillar in PILLARS]
+    
+    # Use calculated scores instead of raw scores
+    calculated_scores = calculate_all_pillar_scores(lab_info)
+    values = [calculated_scores.get(k, 0) for k in pillar_keys]
+
+    # Build scenario values (initially equal to base values)
+    scenario_values = values.copy()
+
+    # If there are selected policies, boost the corresponding pillar by +10 per policy
+    selected_titles_for_boost = st.session_state.get('selected_policies', [])
+    if selected_titles_for_boost:
+        policies_map_local = {p['title']: p for p in load_policies()}
+
+        boosts = {key: 0 for key in pillar_keys}
+        for t in selected_titles_for_boost:
+            p = policies_map_local.get(t)
+            if not p:
+                continue
+            pillar = infer_policy_pillar(p)
+            if pillar in boosts:
+                boosts[pillar] += 10
+
+        # Apply boosts with clamping to [0, 100]
+        for idx, key in enumerate(pillar_keys):
+            boosted = scenario_values[idx] + boosts.get(key, 0)
+            if boosted > 100:
+                boosted = 100
+            if boosted < 0:
+                boosted = 0
+            scenario_values[idx] = boosted
+
+    # Close the radar shape by repeating the first point
+    r_values = values + [values[0]]
+    theta_values = categories + [categories[0]]
+    r_values_scenario = scenario_values + [scenario_values[0]]
+
+    fig = go.Figure()
+    fig.add_trace(
+        go.Scatterpolar(
+            r=r_values,
+            theta=theta_values,
+            fill='toself',
+            name='WEFE Score',
+            line_color='#2c3e50',
+            fillcolor='rgba(44,62,80,0.25)'
+        )
+    )
+    # Add scenario overlay: grey if no policies selected, green if any selected
+    has_selection = bool(st.session_state.get('selected_policies'))
+    scenario_line_color = '#27ae60' if has_selection else '#7f8c8d'
+    scenario_fill_color = 'rgba(39,174,96,0.4)' if has_selection else 'rgba(127,140,141,0.3)'
+    fig.add_trace(
+        go.Scatterpolar(
+            r=r_values_scenario,
+            theta=theta_values,
+            fill='toself',
+            name='Scenario',
+            line_color=scenario_line_color,
+            fillcolor=scenario_fill_color
+        )
+    )
+    fig.update_layout(
+        title=f"WEFE Scores – {lab_info.get('name', selected_lab_name)}",
+        polar=dict(
+            radialaxis=dict(visible=True, range=[0, 100])
+        ),
+        showlegend=False,
+        margin=dict(l=10, r=10, t=40, b=10)
+    )
+    
+    return fig
+
+def create_indicators_heatmap(lab_info):
+    """Create a heatmap showing indicators (rows) vs pillars (columns) with normalized values organized in parallel"""
+    if not lab_info or 'wefe_pillars' not in lab_info:
+        return None
+    
+    # Load pillars definitions for min/max values
+    pillars_def = load_pillars_definitions()
+    if not pillars_def:
+        return None
+    
+    wefe_pillars_def = pillars_def.get('wefe_pillars', {})
+    indicators_to_invert = get_indicators_to_invert()
+    
+    pillar_columns = ['Water', 'Energy', 'Food', 'Ecosystems']
+    pillar_keys = ['water', 'energy', 'food', 'ecosystems']
+    
+    # Collect indicators for each pillar in order
+    pillar_indicators = {}
+    for pillar_key in pillar_keys:
+        pillar_def = wefe_pillars_def.get(pillar_key, {})
+        indicators_list = []
+        
+        for category_name, category_def in pillar_def.get('categories', {}).items():
+            for indicator_name, indicator_def in category_def.get('indicators', {}).items():
+                indicators_list.append({
+                    'key': indicator_name,
+                    'name': indicator_def.get('name', indicator_name.replace('_', ' ').title()),
+                    'min_value': indicator_def.get('min_value'),
+                    'max_value': indicator_def.get('max_value'),
+                    'category': category_name
+                })
+        
+        pillar_indicators[pillar_key] = indicators_list
+    
+    # Find the maximum number of indicators across all pillars
+    max_indicators = max(len(indicators) for indicators in pillar_indicators.values())
+    
+    # Create parallel rows (Indicator 1, Indicator 2, etc.)
+    heatmap_matrix = []
+    indicator_rows = []
+    
+    for i in range(max_indicators):
+        row_values = []
+        indicator_rows.append(f"Indicator {i+1}")
+        
+        # For each pillar, get the i-th indicator if it exists
+        for pillar_key in pillar_keys:
+            indicators_list = pillar_indicators[pillar_key]
+            
+            if i < len(indicators_list):
+                # Get the indicator data
+                indicator_info = indicators_list[i]
+                indicator_name = indicator_info['key']
+                
+                # Get the actual value from living lab data
+                pillar_data = lab_info['wefe_pillars'].get(pillar_key, {})
+                indicator_value = None
+                
+                for category_name, category_data in pillar_data.get('indicators', {}).items():
+                    if isinstance(category_data, dict) and indicator_name in category_data:
+                        indicator_value = category_data[indicator_name]
+                        break
+                
+                # Normalize the value if found
+                if indicator_value is not None:
+                    min_val = indicator_info['min_value']
+                    max_val = indicator_info['max_value']
+                    should_invert = indicator_name in indicators_to_invert
+                    
+                    normalized_value = normalize_indicator(indicator_value, min_val, max_val, invert=should_invert)
+                    if normalized_value is not None:
+                        row_values.append(normalized_value)
+                    else:
+                        row_values.append(np.nan)
+                else:
+                    row_values.append(np.nan)
+            else:
+                # This pillar doesn't have an i-th indicator
+                row_values.append(np.nan)
+        
+        heatmap_matrix.append(row_values)
+    
+    # Convert to numpy array
+    heatmap_array = np.array(heatmap_matrix)
+    
+    # Create custom hover text that shows the actual indicator names
+    hover_text = []
+    for i in range(max_indicators):
+        hover_row = []
+        for pillar_key in pillar_keys:
+            indicators_list = pillar_indicators[pillar_key]
+            if i < len(indicators_list):
+                indicator_name = indicators_list[i]['name']
+                hover_row.append(indicator_name)
+            else:
+                hover_row.append("No indicator")
+        hover_text.append(hover_row)
+    
+    # Create the heatmap using plotly
+    fig = go.Figure(data=go.Heatmap(
+        z=heatmap_array,
+        x=pillar_columns,
+        y=indicator_rows,
+        text=hover_text,
+        colorscale=[
+            [0.0, '#d32f2f'],    # Red for low values
+            [0.5, '#ffc107'],    # Yellow for medium values  
+            [1.0, '#4caf50']     # Green for high values
+        ],
+        colorbar=dict(
+            title="Normalized Score<br>(0-100)"
+        ),
+        hoverongaps=False,
+        hovertemplate='<b>%{text}</b><br>' +
+                      '<b>%{x} Pillar</b><br>' +
+                      'Score: %{z:.1f}<br>' +
+                      '<extra></extra>',
+        zmin=0,
+        zmax=100
+    ))
+    
+    fig.update_layout(
+        title="WEFE Indicators Evaluation Heatmap",
+        xaxis_title="WEFE Pillars",
+        yaxis_title="Indicator Position",
+        height=max(400, max_indicators * 30),  # Dynamic height based on number of indicator positions
+        margin=dict(l=100, r=100, t=60, b=50)
+    )
+    
+    return fig
 
 
 def infer_policy_pillar(policy: Dict) -> str:
@@ -162,10 +383,11 @@ def render_policy_details(policy: Dict):
 
 def render_policy_tab():
     """Main function to render the entire policy tab"""
-    st.subheader(f"Policy View - {st.session_state.selected_lab}")
+    
     
     col1, col2 = st.columns(2)
     with col1:
+        st.subheader(f"Policy View - {st.session_state.selected_lab}")
         # Load policies
         policies = load_policies()
         
@@ -187,20 +409,14 @@ def render_policy_tab():
             # Get policies for selected category
             category_policies = get_policies_by_category(policies, selected_category)
             
-            if category_policies:
-                # st.markdown(f"### Policies in {selected_category}")
-                st.markdown(f"### Found {len(category_policies)} policies in this category.")
-                
-                # Display policies
+            if category_policies:                
                 for policy in category_policies:
                     render_policy_details(policy)
             else:
                 st.info(f"No policies found in the {selected_category} category.")
         else:
             st.info("Please select a policy category to view available policies.")
-    
-    with col2:
-        # --- Selected Policies (before radar plot)
+        # --- Selected Policies
         st.markdown("### Selected Policies")
         selected_titles = st.session_state.get('selected_policies', [])
         # Build quick lookup map for colors/policy types
@@ -224,86 +440,23 @@ def render_policy_tab():
                         st.rerun()
         else:
             st.info("No policies selected yet.")
+    with col2:
+        
 
         selected_lab_name = st.session_state.get('selected_lab')
         lab_info = get_selected_lab_info(selected_lab_name) if selected_lab_name else None
         if lab_info and 'wefe_pillars' in lab_info:
-            categories = [pillar["label"] for pillar in PILLARS]
-            pillar_keys = [pillar["key"] for pillar in PILLARS]
-            
-            # Use calculated scores instead of raw scores
-            calculated_scores = calculate_all_pillar_scores(lab_info)
-            values = [calculated_scores.get(k, 0) for k in pillar_keys]
+            # Create and display radar plot
+            # radar_fig = create_wefe_radar_plot(lab_info, selected_lab_name)
+            # if radar_fig:
+            #     st.plotly_chart(radar_fig, use_container_width=True)
 
-            # Build scenario values (initially equal to base values)
-            scenario_values = values.copy()
-
-            # If there are selected policies, boost the corresponding pillar by +3 per policy
-            selected_titles_for_boost = st.session_state.get('selected_policies', [])
-            if selected_titles_for_boost:
-                # We may have a map of policies by title above; rebuild defensively if not present
-                try:
-                    policies_map_local = policies_by_title  # type: ignore # may be defined above
-                except NameError:
-                    policies_map_local = {p['title']: p for p in load_policies()}
-
-                boosts = {key: 0 for key in pillar_keys}
-                for t in selected_titles_for_boost:
-                    p = policies_map_local.get(t)
-                    if not p:
-                        continue
-                    pillar = infer_policy_pillar(p)
-                    if pillar in boosts:
-                        boosts[pillar] += 10
-
-                # Apply boosts with clamping to [0, 100]
-                for idx, key in enumerate(pillar_keys):
-                    boosted = scenario_values[idx] + boosts.get(key, 0)
-                    if boosted > 100:
-                        boosted = 100
-                    if boosted < 0:
-                        boosted = 0
-                    scenario_values[idx] = boosted
-
-            # Close the radar shape by repeating the first point
-            r_values = values + [values[0]]
-            theta_values = categories + [categories[0]]
-            r_values_scenario = scenario_values + [scenario_values[0]]
-
-            fig = go.Figure()
-            fig.add_trace(
-                go.Scatterpolar(
-                    r=r_values,
-                    theta=theta_values,
-                    fill='toself',
-                    name='WEFE Score',
-                    line_color='#2c3e50',
-                    fillcolor='rgba(44,62,80,0.25)'
-                )
-            )
-            # Add scenario overlay: grey if no policies selected, green if any selected
-            has_selection = bool(st.session_state.get('selected_policies'))
-            scenario_line_color = '#27ae60' if has_selection else '#7f8c8d'
-            scenario_fill_color = 'rgba(39,174,96,0.4)' if has_selection else 'rgba(127,140,141,0.3)'
-            fig.add_trace(
-                go.Scatterpolar(
-                    r=r_values_scenario,
-                    theta=theta_values,
-                    fill='toself',
-                    name='Scenario',
-                    line_color=scenario_line_color,
-                    fillcolor=scenario_fill_color
-                )
-            )
-            fig.update_layout(
-                title=f"WEFE Scores – {lab_info.get('name', selected_lab_name)}",
-                polar=dict(
-                    radialaxis=dict(visible=True, range=[0, 100])
-                ),
-                showlegend=False,
-                margin=dict(l=10, r=10, t=40, b=10)
-            )
-            st.plotly_chart(fig, use_container_width=True)
+            # Heatmap
+            heatmap_fig = create_indicators_heatmap(lab_info)
+            if heatmap_fig:
+                st.plotly_chart(heatmap_fig, use_container_width=True)
+            else:
+                st.info("Heatmap data not available for the selected living lab.")
 
             
 

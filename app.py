@@ -19,7 +19,7 @@ def render_footer():
         """
         <style>
             .app-footer { background: #ffffff; border-top: 1px solid #e6e6e6; padding: 10px 16px; margin-top: 12px; }
-            .app-footer .footer-inner { display: flex; align-items: center; gap: 16px; }
+            .app-footer .footer-inner { display: flex; align-items: center; justify-content: center; gap: 16px; }
             .app-footer .footer-text { font-size: 12px; color: #333333; }
             .app-footer img { height: 40px; }
         </style>
@@ -41,7 +41,7 @@ def render_footer():
         unsafe_allow_html=True,
     )
 
-# Page configuration and session state initialization
+# Layout and session state initialization
 st.set_page_config(layout="wide", page_title="Trans-Sahara Support Tool")
 initialize_session_state()
 
@@ -52,9 +52,7 @@ if not st.session_state.session_started:
         st.sidebar.markdown("**Trans-Sahara**")
 
 
-# Analysis Interface
 if st.session_state.session_started:
-    # Move weight controls to main area instead of sidebar to allow sidebar to close
     with st.expander("🎛️ WEFE Weight Settings", expanded=False):
         col1, col2, col3, col4 = st.columns(4)
         with col1:
@@ -66,7 +64,6 @@ if st.session_state.session_started:
         with col4:
             eco_w = st.slider("Ecosystems", 0, 5, st.session_state.get('policy_weights', {}).get('Ecosystem', 3), key="eco_weight_session")
         
-        # Update weights in session state
         st.session_state.policy_weights = {
             "Water": water_w, "Energy": energy_w, "Food": food_w, "Ecosystem": eco_w
         }
