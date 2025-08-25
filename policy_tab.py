@@ -4,6 +4,7 @@ import pandas as pd
 from typing import Dict, List, Any
 import plotly.graph_objects as go
 from initial_page import get_selected_lab_info
+from utils import PILLARS
 import os
 
 # Load policies data
@@ -227,8 +228,8 @@ def render_policy_tab():
         selected_lab_name = st.session_state.get('selected_lab')
         lab_info = get_selected_lab_info(selected_lab_name) if selected_lab_name else None
         if lab_info and 'wefe_pillars' in lab_info:
-            categories = ["Water", "Energy", "Food", "Ecosystems"]
-            pillar_keys = ["water", "energy", "food", "ecosystems"]
+            categories = [pillar["label"] for pillar in PILLARS]
+            pillar_keys = [pillar["key"] for pillar in PILLARS]
             values = [lab_info['wefe_pillars'].get(k, {}).get('score', 0) for k in pillar_keys]
 
             # Build scenario values (initially equal to base values)
@@ -340,10 +341,13 @@ def render_policy_tab():
                         return 0
 
                 # Create a zero-filled table with subpillars as rows and applied policies as columns
-                value_table = pd.DataFrame(0, index=subpillar_rows, columns=selected_policy_titles)
+                # Add % to policy column names to indicate they are percentages
+                policy_columns_with_percent = [f"{title} (%)" for title in selected_policy_titles]
+                value_table = pd.DataFrame(0, index=subpillar_rows, columns=policy_columns_with_percent)
 
                 # Fill each policy column based on its synergies and trade-offs
-                for policy_title in selected_policy_titles:
+                for idx, policy_title in enumerate(selected_policy_titles):
+                    policy_column = policy_columns_with_percent[idx]
                     policy_obj = policies_by_title.get(policy_title)
                     if not policy_obj:
                         continue
@@ -354,24 +358,120 @@ def render_policy_tab():
                                 change_value = _parse_change(ind.get('expected_change'))
                                 row_name = indicator_to_row.get(indicator_key)
                                 if row_name is not None and row_name in value_table.index:
-                                    value_table.at[row_name, policy_title] += change_value
+                                    current_value = value_table.at[row_name, policy_column]
+                                    new_value = current_value + change_value
+                                    value_table.at[row_name, policy_column] = round(new_value, 2)
 
-                # Add TOTAL column summing across the policy columns
-                value_table['TOTAL'] = value_table[selected_policy_titles].sum(axis=1)
+                # Add Actual Value column from living lab data
+                actual_values = []
+                for row_name in subpillar_rows:
+                    # Parse the row name to extract pillar, category, and indicator
+                    parts = row_name.split(' / ')
+                    if len(parts) == 3:
+                        pillar_key, category_key, indicator_key = parts
+                        try:
+                            actual_value = wefe[pillar_key]['indicators'][category_key][indicator_key]
+                            actual_values.append(round(actual_value, 2))
+                        except (KeyError, TypeError):
+                            actual_values.append(0.00)
+                    else:
+                        actual_values.append(0.00)
+                
+                value_table.insert(0, 'Actual Value', actual_values)
+                # Ensure Actual Value column is properly rounded
+                value_table['Actual Value'] = value_table['Actual Value'].round(2)
 
-                # Style cells: green for positive, red for negative
-                def _pos_neg_style(v: Any) -> str:
+                # Ensure all policy columns are properly rounded
+                for col in policy_columns_with_percent:
+                    value_table[col] = value_table[col].round(2)
+
+                # Add Total Improvement column (%) summing across the policy columns and round to 2 decimals
+                total_improvements = value_table[policy_columns_with_percent].sum(axis=1)
+                value_table['Total Improvement (%)'] = total_improvements.round(2)
+                
+                # Add Value of Improvement column (concrete values calculated from percentages)
+                value_of_improvement = []
+                for idx, actual_val in enumerate(actual_values):
+                    total_improvement_percent = value_table.iloc[idx]['Total Improvement (%)']
+                    concrete_improvement = (actual_val * total_improvement_percent) / 100
+                    value_of_improvement.append(round(concrete_improvement, 2))
+                
+                value_table['Value of Improvement'] = value_of_improvement
+                
+                # Add Final State column (actual + concrete improvement) and round to 2 decimals
+                final_states = value_table['Actual Value'] + value_table['Value of Improvement']
+                value_table['Final State'] = final_states.round(2)
+                
+                # Force all numeric columns to have exactly 2 decimal places by converting to float and rounding
+                numeric_columns = ['Actual Value', 'Total Improvement (%)', 'Value of Improvement', 'Final State'] + policy_columns_with_percent
+                for col in numeric_columns:
+                    if col in value_table.columns:
+                        value_table[col] = value_table[col].astype(float).round(2)
+
+                # Style cells with different logic per column type
+                def _style_cell(val, row_idx, col_name):
                     try:
-                        num = float(v)
+                        num = float(val)
                     except Exception:
                         return ''
+                    
+                    # Don't style the Actual Value column (neutral)
+                    if col_name == 'Actual Value':
+                        return 'background-color: #f8f9fa; color: #495057'
+                    
+                    # Style Value of Improvement: green if positive, red if negative
+                    if col_name == 'Value of Improvement':
+                        if num > 0:
+                            return 'background-color: #e8f5e9; color: #1b5e20'
+                        elif num < 0:
+                            return 'background-color: #ffebee; color: #b71c1c'
+                        else:
+                            return 'background-color: #f8f9fa; color: #495057'
+                    
+                    # Style Final State: green if > actual value, red if < actual value
+                    if col_name == 'Final State':
+                        # We need to get the actual value for this row to compare
+                        if row_idx is not None:
+                            try:
+                                actual_val = float(value_table.iloc[row_idx]['Actual Value'])
+                                if num > actual_val:
+                                    return 'background-color: #e8f5e9; color: #1b5e20'
+                                elif num < actual_val:
+                                    return 'background-color: #ffebee; color: #b71c1c'
+                                else:
+                                    return 'background-color: #f8f9fa; color: #495057'
+                            except:
+                                return 'background-color: #e3f2fd; color: #1565c0'
+                        else:
+                            return 'background-color: #e3f2fd; color: #1565c0'
+                    
+                    # Style policy columns and Total Improvement with green/red based on value
                     if num > 0:
                         return 'background-color: #e8f5e9; color: #1b5e20'
                     if num < 0:
                         return 'background-color: #ffebee; color: #b71c1c'
                     return ''
 
-                styled = value_table.style.format("{:.0f}%").applymap(_pos_neg_style)
+                # Create format dictionary for all columns
+                format_dict = {}
+                for col in value_table.columns:
+                    if col in ['Actual Value', 'Value of Improvement', 'Final State']:
+                        format_dict[col] = "{:.2f}"
+                    else:  # All percentage columns
+                        format_dict[col] = "{:.2f}%"
+                
+                # Apply styling with comprehensive formatting
+                styled = value_table.style.format(format_dict)
+                
+                # Apply cell styling with row index for Final State comparison
+                def apply_styling(df):
+                    styled_df = pd.DataFrame('', index=df.index, columns=df.columns)
+                    for row_idx in range(len(df)):
+                        for col in df.columns:
+                            styled_df.iloc[row_idx, styled_df.columns.get_loc(col)] = _style_cell(df.iloc[row_idx, df.columns.get_loc(col)], row_idx, col)
+                    return styled_df
+                
+                styled = styled.apply(apply_styling, axis=None)
                 st.dataframe(styled, use_container_width=True)
         else:
             st.info("WEFE scores not available for the selected living lab.")

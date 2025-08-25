@@ -1,10 +1,9 @@
-import base64
 import streamlit as st
 import pandas as pd
 import numpy as np
 import random
 import json
-from policies import POLICY_DETAILS
+import os
 from interventions import INTERVENTIONS
 
 def load_living_labs():
@@ -42,14 +41,6 @@ def run_policy_simulation():
         "Food": np.random.randint(0, 100),
         "Ecosystem": np.random.randint(0, 100)
     }
-    st.session_state.previous_scores = {
-        k: v + np.random.randint(-10, 10)
-        for k, v in st.session_state.policy_scores.items()
-    }
-    st.session_state.active_interventions = list({
-        i for p in st.session_state.selected_policies
-        for i in st.session_state.policy_suggestions[p]
-    })
 
 
 def get_map_data():
@@ -68,39 +59,62 @@ def add_policy_to_session(policy_name):
     """Add a new policy to the session state"""
     st.session_state.selected_policies.append(policy_name)
     st.session_state.policy_inputs[policy_name] = {"intensity": 50, "year": 2030}
-    st.session_state.policy_suggestions[policy_name] = random.sample(INTERVENTIONS, 3) 
+    st.session_state.policy_suggestions[policy_name] = random.sample(INTERVENTIONS, 3)
     
-def render_footer():
-    """Render the footer of the app"""
-    footer_logo_b64 = ""
+def load_policies():
     try:
-        with open("assets/founded-logo.jpg", "rb") as f:
-            footer_logo_b64 = base64.b64encode(f.read()).decode()
-    except Exception:
-        pass
+        json_path = os.path.join(os.path.dirname(__file__), 'data', 'policies.json')
+        with open(json_path, 'r', encoding='utf-8') as f:
+            policies_list = json.load(f)
+        # Convert list to dict for compatibility
+        return {p['title']: p for p in policies_list}
+    except FileNotFoundError:
+        print(f"Error: Could not find policies.json at {json_path}")
+        # Check if file exists in current directory
+        current_dir_path = 'data/policies.json'
+        if os.path.exists(current_dir_path):
+            print(f"Found policies.json in current directory: {current_dir_path}")
+            with open(current_dir_path, 'r', encoding='utf-8') as f:
+                policies_list = json.load(f)
+            return {p['title']: p for p in policies_list}
+        else:
+            print(f"Also checked current directory path: {current_dir_path} - not found")
+            print(f"Current working directory: {os.getcwd()}")
+            print(f"Files in current directory: {os.listdir('.')}")
+            if os.path.exists('data'):
+                print(f"Files in data directory: {os.listdir('data')}")
+            return {}
+    except Exception as e:
+        print(f"Error loading policies: {e}")
+        return {}
 
-    st.markdown(
-        """
-        <style>
-            .app-footer { background: #ffffff; border-top: 1px solid #e6e6e6; padding: 10px 16px; margin-top: 12px; }
-            .app-footer .footer-inner { display: flex; align-items: center; gap: 16px; }
-            .app-footer .footer-text { font-size: 12px; color: #333333; }
-            .app-footer img { height: 40px; }
-        </style>
-        """,
-        unsafe_allow_html=True,
-    )
+POLICY_DETAILS = load_policies()
 
-    st.markdown(
-        f"""
-        <div class=\"app-footer\">
-            <div class=\"footer-inner\">
-                {('<img src=\"data:image/jpeg;base64,' + footer_logo_b64 + '\" alt=\"EU logo\"/>') if footer_logo_b64 else ''}
-                <div class=\"footer-text\">
-                    Funded by the European Union under the Horizon Europe Framework Programme Grant Agreement Nº: 101182176. Views and opinions expressed are however those of the author(s) only and do not necessarily reflect those of the European Union or of the European Research Executive Agency. Neither the European Union nor the granting authority can be held responsible for them.
-                </div>
-            </div>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
+# WEFE Pillars configuration
+PILLARS = [
+    {
+        "key": "water",
+        "label": "Water",
+        "icon": "💧",
+        "color": "#3498db"
+    },
+    {
+        "key": "energy",
+        "label": "Energy",
+        "icon": "⚡",
+        "color": "#f39c12"
+    },
+    {
+        "key": "food",
+        "label": "Food",
+        "icon": "🌾",
+        "color": "#27ae60"
+    },
+    {
+        "key": "ecosystems",
+        "label": "Ecosystems",
+        "icon": "🌳",
+        "color": "#16a085"
+    }
+] 
+    

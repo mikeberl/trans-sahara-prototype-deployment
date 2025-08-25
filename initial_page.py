@@ -3,7 +3,7 @@ import streamlit as st
 import folium
 from folium import plugins
 import pandas as pd
-from utils import load_living_labs, get_regions_from_labs
+from utils import load_living_labs, get_regions_from_labs, PILLARS
 
 def create_living_labs_map(selected_lab=None):
     """Create an interactive map showing all living lab areas as squares"""
@@ -105,32 +105,7 @@ def render_wefe_pillars_view(lab_info):
         st.info("No WEFE data available for this living lab.")
         return
 
-    pillars = [
-        {
-            "key": "water",
-            "label": "Water",
-            "icon": "💧",
-            "color": "#3498db"
-        },
-        {
-            "key": "energy",
-            "label": "Energy",
-            "icon": "⚡",
-            "color": "#f39c12"
-        },
-        {
-            "key": "food",
-            "label": "Food",
-            "icon": "🌾",
-            "color": "#27ae60"
-        },
-        {
-            "key": "ecosystems",
-            "label": "Ecosystems",
-            "icon": "🌳",
-            "color": "#16a085"
-        }
-    ]
+    pillars = PILLARS
 
     cols = st.columns(4)
     for i, pillar in enumerate(pillars):
@@ -178,7 +153,7 @@ def render_welcome_page():
                 st.markdown(f"**Country:** {lab_info['country']}")
                 st.markdown(f"**Climate Type:** {lab_info['climate_type']}")
                 st.markdown(f"**Description:** {lab_info['description']}")
-                # Total surface information
+                
                 if 'surface_m3' in lab_info:
                     st.markdown(f"**Total Surface:** {lab_info['surface_m3']} m³")
                 
@@ -188,7 +163,6 @@ def render_welcome_page():
                         for i, challenge in enumerate(lab_info['challenges'], 1):
                             st.markdown(f"- {challenge}")
                 
-                # Land use surfaces table (replaces contacts section, no expander)
                 land_use = lab_info.get('land_use_surfaces_m3', {})
                 if land_use:
                     total_surface = lab_info.get('surface_m3') or sum(land_use.values())
