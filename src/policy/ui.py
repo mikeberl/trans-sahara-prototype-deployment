@@ -1,7 +1,7 @@
 import streamlit as st
 import pandas as pd
 from typing import Dict, List, Any
-from policy_data import load_policies, parse_change_value
+from src.policy.data import load_policies, parse_change_value
 
 
 def render_synergy_tradeoff_item(item: Dict, policy_title: str, is_synergy: bool = True):

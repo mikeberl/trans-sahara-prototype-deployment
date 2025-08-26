@@ -28,7 +28,7 @@ TABLE_STYLES = {
 def load_policies_as_dict():
     """Load policies from JSON file and return as dictionary (for compatibility with legacy code)"""
     try:
-        json_path = os.path.join(os.path.dirname(__file__), 'data', 'policies.json')
+        json_path = os.path.join(os.path.dirname(__file__), '..', '..', 'data', 'policies.json')
         with open(json_path, 'r', encoding='utf-8') as f:
             policies_list = json.load(f)
         # Convert list to dict for compatibility
@@ -36,7 +36,7 @@ def load_policies_as_dict():
     except FileNotFoundError:
         print(f"Error: Could not find policies.json at {json_path}")
         # Check if file exists in current directory
-        current_dir_path = 'data/policies.json'
+        current_dir_path = os.path.join('..', '..', 'data', 'policies.json')
         if os.path.exists(current_dir_path):
             print(f"Found policies.json in current directory: {current_dir_path}")
             with open(current_dir_path, 'r', encoding='utf-8') as f:

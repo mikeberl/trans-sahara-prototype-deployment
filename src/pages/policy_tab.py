@@ -1,8 +1,8 @@
 import streamlit as st
-from initial_page import get_selected_lab_info
-from policy_data import get_policy_categories, get_policies_by_category, load_policies
-from policy_visualization import create_indicators_heatmap, create_improved_indicators_heatmap
-from policy_ui import (
+from src.pages.initial_page import get_selected_lab_info
+from src.policy.data import get_policy_categories, get_policies_by_category, load_policies
+from src.policy.visualization import create_indicators_heatmap, create_improved_indicators_heatmap
+from src.policy.ui import (
     render_policy_details, 
     create_and_display_indicator_table, 
     render_selected_policies_section,
@@ -37,7 +37,7 @@ def render_policy_tab():
                 st.info(f"No policies found in the {selected_category} category.")
         else:
             st.info("Please select a policy category to view available policies.")
-        
+            
         # Render selected policies section
         selected_policies = st.session_state.get('selected_policies', [])
         render_selected_policies_section(selected_policies)
@@ -51,7 +51,7 @@ def render_policy_tab():
             # Render display controls
             show_original, show_improved, show_table = render_display_controls(selected_policies)
             
-            # Display original heatmap if selected
+                        # Display original heatmap if selected
             if show_original:
                 heatmap_fig = create_indicators_heatmap(lab_info)
                 if heatmap_fig:

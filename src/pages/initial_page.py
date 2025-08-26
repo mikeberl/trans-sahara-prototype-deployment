@@ -3,7 +3,8 @@ import streamlit as st
 import folium
 from folium import plugins
 import pandas as pd
-from utils import load_living_labs, get_regions_from_labs, PILLARS, calculate_all_pillar_scores, calculate_overall_wefe_score, get_indicator_units, format_indicator_with_unit
+from src.core.data_loader import load_living_labs, get_regions_from_labs
+from src.core.wefe_calculations import PILLARS, calculate_all_pillar_scores, calculate_overall_wefe_score, get_indicator_units, format_indicator_with_unit
 import streamviz
 
 def create_living_labs_map(selected_lab=None):

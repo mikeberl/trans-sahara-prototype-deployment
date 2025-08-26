@@ -1,59 +1,15 @@
-import streamlit as st
-import pandas as pd
-import numpy as np
-import random
+"""
+WEFE Nexus calculation functions and utilities
+"""
 import json
 import os
-from interventions import INTERVENTIONS
+from typing import Dict, List
 
-def load_living_labs():
-    """Load living labs data from JSON file"""
-    with open("data/livinglab.json", "r", encoding="utf-8") as f:
-        return json.load(f)
-
-def get_regions_from_labs(livinglabs):
-    """Extract region names from living labs data"""
-    return [lab["name"] for lab in livinglabs]
-
-def initialize_session_state():
-    """Initialize all session state variables"""
-    if "session_started" not in st.session_state:
-        st.session_state.session_started = False
-    if "current_selected_lab" not in st.session_state:
-        st.session_state.current_selected_lab = None
-    if "selected_lab" not in st.session_state:
-        st.session_state.selected_lab = "Tunis"  # Default lab
-    if "selected_policies" not in st.session_state:
-        st.session_state.selected_policies = []
-    if "policy_inputs" not in st.session_state:
-        st.session_state.policy_inputs = {}
-    if "policy_suggestions" not in st.session_state:
-        st.session_state.policy_suggestions = {}
-    if "active_interventions" not in st.session_state:
-        st.session_state.active_interventions = []
-
-def run_policy_simulation():
-    """Run the policy simulation and update session state"""
-    st.session_state.sim_run = True
-    st.session_state.policy_scores = {
-        "Water": np.random.randint(0, 100),
-        "Energy": np.random.randint(0, 100),
-        "Food": np.random.randint(0, 100),
-        "Ecosystem": np.random.randint(0, 100)
-    }
-
-
-def get_map_data():
-    """Get default map data for Tunisia"""
-    return pd.DataFrame({"lat": [34.8], "lon": [10.1]})
-
-# Policy functions moved to policy_utils.py
-from policy_utils import POLICY_DETAILS
 
 def load_pillars():
     """Load WEFE pillars configuration from JSON file"""
     try:
-        json_path = os.path.join(os.path.dirname(__file__), 'data', 'pillars.json')
+        json_path = os.path.join(os.path.dirname(__file__), '..', '..', 'data', 'pillars.json')
         with open(json_path, 'r', encoding='utf-8') as f:
             pillars_data = json.load(f)
         
@@ -105,9 +61,9 @@ def load_pillars():
             {"key": "ecosystems", "label": "Ecosystems", "icon": "🌳", "color": "#16a085"}
         ]
 
+
 PILLARS = load_pillars()
 
-# load_pillars_definitions() moved to policy_data.py
 
 def normalize_indicator(value, min_val, max_val, invert=False):
     """
@@ -140,6 +96,7 @@ def normalize_indicator(value, min_val, max_val, invert=False):
     
     return round(normalized, 1)
 
+
 def get_indicators_to_invert():
     """
     Define which indicators should be inverted (lower values = better scores)
@@ -155,6 +112,7 @@ def get_indicators_to_invert():
         'endangered_species_count',
         'soil_erosion_rate'
     }
+
 
 def calculate_pillar_score(pillar_key, lab_data, pillars_definitions):
     """
@@ -211,6 +169,7 @@ def calculate_pillar_score(pillar_key, lab_data, pillars_definitions):
     else:
         return None
 
+
 def calculate_all_pillar_scores(lab_data):
     """
     Calculate scores for all pillars for a given living lab
@@ -221,8 +180,8 @@ def calculate_all_pillar_scores(lab_data):
     Returns:
         Dictionary with calculated scores for each pillar
     """
-    from policy_data import load_pillars_definitions
-    pillars_definitions = load_pillars_definitions()
+    # Import here to avoid circular imports
+    pillars_definitions = _load_pillars_definitions_local()
     
     scores = {}
     for pillar in PILLARS:
@@ -231,6 +190,26 @@ def calculate_all_pillar_scores(lab_data):
         scores[pillar_key] = calculated_score
     
     return scores
+
+
+def _load_pillars_definitions_local():
+    """Load pillars definitions locally to avoid circular imports"""
+    try:
+        json_path = os.path.join(os.path.dirname(__file__), '..', '..', 'data', 'pillars.json')
+        with open(json_path, 'r', encoding='utf-8') as f:
+            return json.load(f)
+    except FileNotFoundError:
+        current_dir_path = os.path.join('..', '..', 'data', 'pillars.json')
+        if os.path.exists(current_dir_path):
+            with open(current_dir_path, 'r', encoding='utf-8') as f:
+                return json.load(f)
+        else:
+            print(f"Error: Could not find pillars.json")
+            return {}
+    except Exception as e:
+        print(f"Error loading pillars definitions: {e}")
+        return {}
+
 
 def calculate_overall_wefe_score(lab_data, weights=None):
     """
@@ -307,6 +286,7 @@ def calculate_overall_wefe_score(lab_data, weights=None):
     
     return overall_score, breakdown
 
+
 def get_indicator_units():
     """
     Extract units for all indicators from pillars.json
@@ -314,8 +294,7 @@ def get_indicator_units():
     Returns:
         Dictionary mapping indicator names to their units
     """
-    from policy_data import load_pillars_definitions
-    pillars_definitions = load_pillars_definitions()
+    pillars_definitions = _load_pillars_definitions_local()
     units_dict = {}
     
     if not pillars_definitions or 'wefe_pillars' not in pillars_definitions:
@@ -331,6 +310,7 @@ def get_indicator_units():
                 units_dict[indicator_key] = unit
     
     return units_dict
+
 
 def format_indicator_with_unit(indicator_name, value, units_dict=None):
     """
@@ -384,5 +364,4 @@ def format_indicator_with_unit(indicator_name, value, units_dict=None):
         return f"{value} {unit}"
     else:
         # No unit information available
-        return f"{value}" 
-    
+        return f"{value}"

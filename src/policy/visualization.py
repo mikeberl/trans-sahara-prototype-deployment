@@ -2,8 +2,8 @@ import streamlit as st
 import plotly.graph_objects as go
 import numpy as np
 from typing import Dict, List
-from utils import PILLARS, calculate_all_pillar_scores, normalize_indicator, get_indicators_to_invert
-from policy_data import load_policies, load_pillars_definitions, infer_policy_pillar, parse_change_value
+from src.core.wefe_calculations import PILLARS, calculate_all_pillar_scores, normalize_indicator, get_indicators_to_invert
+from src.policy.data import load_policies, load_pillars_definitions, infer_policy_pillar, parse_change_value
 
 
 def create_wefe_radar_plot(lab_info, selected_lab_name):

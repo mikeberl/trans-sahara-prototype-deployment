@@ -1,10 +1,10 @@
 import streamlit as st
 import os
 import base64
-from utils import initialize_session_state
-from initial_page import render_sidebar_welcome_page, render_welcome_page
-from policy_tab import render_policy_tab
-from intervention_tab import render_intervention_tab
+from src.core.data_loader import initialize_session_state
+from src.pages.initial_page import render_sidebar_welcome_page, render_welcome_page
+from src.pages.policy_tab import render_policy_tab
+from src.pages.intervention_tab import render_intervention_tab
 
 def render_footer():
     """Render the footer of the app"""

@@ -1,8 +1,8 @@
 import streamlit as st
 import pandas as pd
 import random
-from interventions import INTERVENTIONS
-from utils import get_map_data
+from src.intervention.models import INTERVENTIONS
+from src.core.data_loader import get_map_data
 
 def render_intervention_management():
     """Render the intervention management interface"""
