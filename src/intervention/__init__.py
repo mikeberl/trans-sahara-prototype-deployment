@@ -1,3 +1,0 @@
-"""
-Intervention management functionality
-"""

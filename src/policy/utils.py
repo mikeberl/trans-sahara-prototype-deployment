@@ -54,16 +54,4 @@ def load_policies_as_dict():
 POLICY_DETAILS = load_policies_as_dict()
 
 
-def get_safe_key(text: str) -> str:
-    """Convert text to a safe key for Streamlit components"""
-    return text.replace(" ", "_").replace("-", "_")
-
-
-def format_policy_column_name(policy_title: str) -> str:
-    """Format policy title for use as column name with percentage indicator"""
-    return f"{policy_title} (%)"
-
-
-def clamp_value(value: float, min_val: float = 0, max_val: float = 100) -> float:
-    """Clamp a value between min and max bounds"""
-    return max(min_val, min(max_val, value))
+# Utility functions removed - were not being used
