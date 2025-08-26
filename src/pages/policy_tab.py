@@ -1,4 +1,5 @@
 import streamlit as st
+import os
 from src.pages.initial_page import get_selected_lab_info
 from src.policy.data import get_policy_categories, get_policies_by_category, load_policies
 from src.policy.visualization import create_indicators_heatmap, create_improved_indicators_heatmap
@@ -8,6 +9,7 @@ from src.policy.ui import (
     render_selected_policies_section,
     render_display_controls
 )
+from src.core.intervention_optimizer import run_policy_simulation
 
 
 def render_policy_tab():
@@ -40,6 +42,16 @@ def render_policy_tab():
             
         selected_policies = st.session_state.get('selected_policies', [])
         render_selected_policies_section(selected_policies)
+        if selected_policies:
+            if st.button("🚀 Run Policy Simulation", key="run_policy_simulation_btn"):
+                policies_by_title = {p['title']: p for p in load_policies()}
+                selected_policy_objs = [policies_by_title[t] for t in selected_policies if t in policies_by_title]
+                base_dir = os.path.dirname(__file__)
+                result = run_policy_simulation(base_dir, selected_policy_objs)
+                st.session_state["policy_simulation_result"] = result
+                # Prepare a simple list to surface on the interventions tab
+                st.session_state["active_interventions"] = [iv['title'] for iv in result.get('selected_interventions', [])]
+                st.success("Simulation completed. Navigate to the Intervention tab to view recommended interventions.")
             
     with col2:
         selected_lab_name = st.session_state.get('selected_lab')
