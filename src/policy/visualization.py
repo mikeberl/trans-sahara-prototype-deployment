@@ -14,14 +14,12 @@ def create_wefe_radar_plot(lab_info, selected_lab_name):
     categories = [pillar["label"] for pillar in PILLARS]
     pillar_keys = [pillar["key"] for pillar in PILLARS]
     
-    # Use calculated scores instead of raw scores
     calculated_scores = calculate_all_pillar_scores(lab_info)
     values = [calculated_scores.get(k, 0) for k in pillar_keys]
 
-    # Build scenario values (initially equal to base values)
+    # to track impact of policies on indicators
     scenario_values = values.copy()
 
-    # If there are selected policies, boost the corresponding pillar by +10 per policy
     selected_titles_for_boost = st.session_state.get('selected_policies', [])
     if selected_titles_for_boost:
         policies_map_local = {p['title']: p for p in load_policies()}
@@ -35,7 +33,6 @@ def create_wefe_radar_plot(lab_info, selected_lab_name):
             if pillar in boosts:
                 boosts[pillar] += 10
 
-        # Apply boosts with clamping to [0, 100]
         for idx, key in enumerate(pillar_keys):
             boosted = scenario_values[idx] + boosts.get(key, 0)
             if boosted > 100:
@@ -82,7 +79,6 @@ def create_wefe_radar_plot(lab_info, selected_lab_name):
         showlegend=False,
         margin=dict(l=10, r=10, t=40, b=10)
     )
-    
     return fig
 
 
@@ -91,7 +87,6 @@ def create_indicators_heatmap(lab_info):
     if not lab_info or 'wefe_pillars' not in lab_info:
         return None
     
-    # Load pillars definitions for min/max values
     pillars_def = load_pillars_definitions()
     if not pillars_def:
         return None
@@ -102,7 +97,6 @@ def create_indicators_heatmap(lab_info):
     pillar_columns = ['Water', 'Energy', 'Food', 'Ecosystems']
     pillar_keys = ['water', 'energy', 'food', 'ecosystems']
     
-    # Collect indicators for each pillar in order
     pillar_indicators = {}
     for pillar_key in pillar_keys:
         pillar_def = wefe_pillars_def.get(pillar_key, {})
@@ -120,10 +114,8 @@ def create_indicators_heatmap(lab_info):
         
         pillar_indicators[pillar_key] = indicators_list
     
-    # Find the maximum number of indicators across all pillars
     max_indicators = max(len(indicators) for indicators in pillar_indicators.values())
     
-    # Create parallel rows (Indicator 1, Indicator 2, etc.)
     heatmap_matrix = []
     indicator_rows = []
     
@@ -131,16 +123,13 @@ def create_indicators_heatmap(lab_info):
         row_values = []
         indicator_rows.append(f"Indicator {i+1}")
         
-        # For each pillar, get the i-th indicator if it exists
         for pillar_key in pillar_keys:
             indicators_list = pillar_indicators[pillar_key]
             
             if i < len(indicators_list):
-                # Get the indicator data
                 indicator_info = indicators_list[i]
                 indicator_name = indicator_info['key']
                 
-                # Get the actual value from living lab data
                 pillar_data = lab_info['wefe_pillars'].get(pillar_key, {})
                 indicator_value = None
                 
@@ -163,15 +152,12 @@ def create_indicators_heatmap(lab_info):
                 else:
                     row_values.append(np.nan)
             else:
-                # This pillar doesn't have an i-th indicator
                 row_values.append(np.nan)
         
         heatmap_matrix.append(row_values)
     
-    # Convert to numpy array
     heatmap_array = np.array(heatmap_matrix)
     
-    # Create custom hover text that shows the actual indicator names
     hover_text = []
     for i in range(max_indicators):
         hover_row = []
@@ -184,7 +170,6 @@ def create_indicators_heatmap(lab_info):
                 hover_row.append("No indicator")
         hover_text.append(hover_row)
     
-    # Create the heatmap using plotly
     fig = go.Figure(data=go.Heatmap(
         z=heatmap_array,
         x=pillar_columns,
@@ -211,7 +196,7 @@ def create_indicators_heatmap(lab_info):
         title="WEFE Indicators Evaluation Heatmap",
         xaxis_title="WEFE Pillars",
         yaxis_title="Indicator Position",
-        height=max(400, max_indicators * 30),  # Dynamic height based on number of indicator positions
+        height=max(400, max_indicators * 30), 
         margin=dict(l=100, r=100, t=60, b=50)
     )
     
@@ -223,11 +208,9 @@ def create_improved_indicators_heatmap(lab_info, selected_policy_titles):
     if not lab_info or 'wefe_pillars' not in lab_info:
         return None
     
-    # Return None if no policies are selected (this check is now done outside)
     if not selected_policy_titles:
         return None
     
-    # Load pillars definitions for min/max values
     pillars_def = load_pillars_definitions()
     if not pillars_def:
         return None
@@ -238,7 +221,6 @@ def create_improved_indicators_heatmap(lab_info, selected_policy_titles):
     pillar_columns = ['Water', 'Energy', 'Food', 'Ecosystems']
     pillar_keys = ['water', 'energy', 'food', 'ecosystems']
     
-    # Collect indicators for each pillar in order
     pillar_indicators = {}
     for pillar_key in pillar_keys:
         pillar_def = wefe_pillars_def.get(pillar_key, {})
@@ -256,11 +238,9 @@ def create_improved_indicators_heatmap(lab_info, selected_policy_titles):
         
         pillar_indicators[pillar_key] = indicators_list
     
-    # Calculate policy improvements for each indicator
     policies_by_title = {p['title']: p for p in load_policies()}
-    indicator_improvements = {}  # indicator_key -> total percentage improvement
+    indicator_improvements = {}
     
-    # Calculate total improvements for each indicator
     for policy_title in selected_policy_titles:
         policy_obj = policies_by_title.get(policy_title)
         if not policy_obj:
@@ -275,10 +255,8 @@ def create_improved_indicators_heatmap(lab_info, selected_policy_titles):
                             indicator_improvements[indicator_key] = 0
                         indicator_improvements[indicator_key] += change_value
     
-    # Find the maximum number of indicators across all pillars
     max_indicators = max(len(indicators) for indicators in pillar_indicators.values())
-    
-    # Create parallel rows (Indicator 1, Indicator 2, etc.)
+
     heatmap_matrix = []
     indicator_rows = []
     
@@ -286,16 +264,13 @@ def create_improved_indicators_heatmap(lab_info, selected_policy_titles):
         row_values = []
         indicator_rows.append(f"Indicator {i+1}")
         
-        # For each pillar, get the i-th indicator if it exists
         for pillar_key in pillar_keys:
             indicators_list = pillar_indicators[pillar_key]
             
             if i < len(indicators_list):
-                # Get the indicator data
                 indicator_info = indicators_list[i]
                 indicator_name = indicator_info['key']
                 
-                # Get the actual value from living lab data
                 pillar_data = lab_info['wefe_pillars'].get(pillar_key, {})
                 indicator_value = None
                 
@@ -306,7 +281,6 @@ def create_improved_indicators_heatmap(lab_info, selected_policy_titles):
                 
                 # Apply improvements and normalize the value if found
                 if indicator_value is not None:
-                    # Apply percentage improvement to the raw value
                     improvement_percent = indicator_improvements.get(indicator_name, 0)
                     improved_value = indicator_value + (indicator_value * improvement_percent / 100)
                     
@@ -324,12 +298,10 @@ def create_improved_indicators_heatmap(lab_info, selected_policy_titles):
                 else:
                     row_values.append(np.nan)
             else:
-                # This pillar doesn't have an i-th indicator
                 row_values.append(np.nan)
         
         heatmap_matrix.append(row_values)
     
-    # Convert to numpy array
     heatmap_array = np.array(heatmap_matrix)
     
     # Create custom hover text that shows the actual indicator names
@@ -345,7 +317,6 @@ def create_improved_indicators_heatmap(lab_info, selected_policy_titles):
                 hover_row.append("No indicator")
         hover_text.append(hover_row)
     
-    # Create the heatmap using plotly
     fig = go.Figure(data=go.Heatmap(
         z=heatmap_array,
         x=pillar_columns,
@@ -372,7 +343,7 @@ def create_improved_indicators_heatmap(lab_info, selected_policy_titles):
         title="WEFE Indicators Evaluation Heatmap - After Policy Improvements",
         xaxis_title="WEFE Pillars",
         yaxis_title="Indicator Position",
-        height=max(400, max_indicators * 30),  # Dynamic height based on number of indicator positions
+        height=max(400, max_indicators * 30), 
         margin=dict(l=100, r=100, t=60, b=50)
     )
     

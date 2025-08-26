@@ -79,7 +79,6 @@ def render_policy_details(policy: Dict):
 
 def create_and_display_indicator_table(lab_info, selected_policy_titles):
     """Create and display the indicator table showing policy impacts on indicators"""
-    # Build the indicators list and an index to map indicator -> row name
     all_indicator_rows: List[str] = []
     indicator_to_row: Dict[str, str] = {}
     wefe = lab_info.get('wefe_pillars', {}) or {}
@@ -99,7 +98,6 @@ def create_and_display_indicator_table(lab_info, selected_policy_titles):
     elif not selected_policy_titles:
         st.info("No policies selected. Add policies to populate table columns.")
     else:
-        # First, find which indicators are actually influenced by the selected policies
         influenced_indicators: set[str] = set()
         for policy_title in selected_policy_titles:
             policy_obj = policies_by_title.get(policy_title)
@@ -119,8 +117,6 @@ def create_and_display_indicator_table(lab_info, selected_policy_titles):
         if not indicator_rows:
             st.info("No indicators are influenced by the selected policies.")
         else:
-            # Create a zero-filled table with indicators as rows and applied policies as columns
-            # Add % to policy column names to indicate they are percentages
             policy_columns_with_percent = [f"{title} (%)" for title in selected_policy_titles]
             value_table = pd.DataFrame(0, index=indicator_rows, columns=policy_columns_with_percent)
 
@@ -141,10 +137,8 @@ def create_and_display_indicator_table(lab_info, selected_policy_titles):
                                 new_value = current_value + change_value
                                 value_table.at[row_name, policy_column] = round(new_value, 2)
 
-            # Add Actual Value column from living lab data
             actual_values = []
             for row_name in indicator_rows:
-                # Parse the row name to extract pillar, category, and indicator
                 parts = row_name.split(' / ')
                 if len(parts) == 3:
                     pillar_key, category_key, indicator_key = parts
@@ -157,18 +151,8 @@ def create_and_display_indicator_table(lab_info, selected_policy_titles):
                     actual_values.append(0.00)
             
             value_table.insert(0, 'Actual Value', actual_values)
-            # Ensure Actual Value column is properly rounded
-            value_table['Actual Value'] = value_table['Actual Value'].round(2)
-
-            # Ensure all policy columns are properly rounded
-            for col in policy_columns_with_percent:
-                value_table[col] = value_table[col].round(2)
-
-            # Add Total Improvement column (%) summing across the policy columns and round to 2 decimals
-            total_improvements = value_table[policy_columns_with_percent].sum(axis=1)
-            value_table['Total Improvement (%)'] = total_improvements.round(2)
+            value_table['Total Improvement (%)']  = value_table[policy_columns_with_percent].sum(axis=1)
             
-            # Add Value of Improvement column (concrete values calculated from percentages)
             value_of_improvement = []
             for idx, actual_val in enumerate(actual_values):
                 total_improvement_percent = value_table.iloc[idx]['Total Improvement (%)']
@@ -177,28 +161,23 @@ def create_and_display_indicator_table(lab_info, selected_policy_titles):
             
             value_table['Value of Improvement'] = value_of_improvement
             
-            # Add Final State column (actual + concrete improvement) and round to 2 decimals
             final_states = value_table['Actual Value'] + value_table['Value of Improvement']
             value_table['Final State'] = final_states.round(2)
             
-            # Force all numeric columns to have exactly 2 decimal places by converting to float and rounding
             numeric_columns = ['Actual Value', 'Total Improvement (%)', 'Value of Improvement', 'Final State'] + policy_columns_with_percent
             for col in numeric_columns:
                 if col in value_table.columns:
-                    value_table[col] = value_table[col].astype(float).round(2)
+                    value_table[col] = value_table[col].astype(float)
 
-            # Style cells with different logic per column type
             def _style_cell(val, row_idx, col_name):
                 try:
                     num = float(val)
                 except Exception:
                     return ''
-                
-                # Don't style the Actual Value column (neutral)
+
                 if col_name == 'Actual Value':
                     return 'background-color: #f8f9fa; color: #495057'
                 
-                # Style Value of Improvement: green if positive, red if negative
                 if col_name == 'Value of Improvement':
                     if num > 0:
                         return 'background-color: #e8f5e9; color: #1b5e20'
@@ -209,7 +188,6 @@ def create_and_display_indicator_table(lab_info, selected_policy_titles):
                 
                 # Style Final State: green if > actual value, red if < actual value
                 if col_name == 'Final State':
-                    # We need to get the actual value for this row to compare
                     if row_idx is not None:
                         try:
                             actual_val = float(value_table.iloc[row_idx]['Actual Value'])
@@ -224,25 +202,21 @@ def create_and_display_indicator_table(lab_info, selected_policy_titles):
                     else:
                         return 'background-color: #e3f2fd; color: #1565c0'
                 
-                # Style policy columns and Total Improvement with green/red based on value
                 if num > 0:
                     return 'background-color: #e8f5e9; color: #1b5e20'
                 if num < 0:
                     return 'background-color: #ffebee; color: #b71c1c'
                 return ''
 
-            # Create format dictionary for all columns
             format_dict = {}
             for col in value_table.columns:
                 if col in ['Actual Value', 'Value of Improvement', 'Final State']:
                     format_dict[col] = "{:.2f}"
-                else:  # All percentage columns
+                else:
                     format_dict[col] = "{:.2f}%"
             
-            # Apply styling with comprehensive formatting
             styled = value_table.style.format(format_dict)
             
-            # Apply cell styling with row index for Final State comparison
             def apply_styling(df):
                 styled_df = pd.DataFrame('', index=df.index, columns=df.columns)
                 for row_idx in range(len(df)):
@@ -289,7 +263,6 @@ def render_display_controls(selected_policies):
         show_original = st.checkbox("Show Original Heatmap", value=True, key="show_original_heatmap")
     
     with col_check2:
-        # Only enable improved heatmap checkbox if policies are selected
         show_improved = st.checkbox(
             "Show Improved Heatmap", 
             value=bool(selected_policies), 
@@ -299,6 +272,12 @@ def render_display_controls(selected_policies):
         )
     
     with col_check3:
-        show_table = st.checkbox("Show Policy Impact Table", value=True, key="show_policy_table")
+        show_table = st.checkbox(
+            "Show Policy Impact Table", 
+            value=bool(selected_policies), 
+            disabled=not bool(selected_policies), 
+            key="show_policy_table",
+            help="Select policies to enable this option"
+        )
     
     return show_original, show_improved, show_table

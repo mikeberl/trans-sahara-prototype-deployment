@@ -38,7 +38,6 @@ def render_policy_tab():
         else:
             st.info("Please select a policy category to view available policies.")
             
-        # Render selected policies section
         selected_policies = st.session_state.get('selected_policies', [])
         render_selected_policies_section(selected_policies)
             
@@ -48,10 +47,8 @@ def render_policy_tab():
         if lab_info and 'wefe_pillars' in lab_info:
             selected_policies = st.session_state.get('selected_policies', [])
             
-            # Render display controls
             show_original, show_improved, show_table = render_display_controls(selected_policies)
             
-                        # Display original heatmap if selected
             if show_original:
                 heatmap_fig = create_indicators_heatmap(lab_info)
                 if heatmap_fig:
