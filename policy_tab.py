@@ -360,34 +360,389 @@ def render_policy_details(policy: Dict):
             else:
                 st.info("No trade-offs identified for this policy.")
 
+def create_improved_indicators_heatmap(lab_info, selected_policy_titles):
+    """Create a heatmap showing indicators (rows) vs pillars (columns) with values after policy improvements"""
+    if not lab_info or 'wefe_pillars' not in lab_info:
+        return None
+    
+    # Return None if no policies are selected (this check is now done outside)
+    if not selected_policy_titles:
+        return None
+    
+    # Load pillars definitions for min/max values
+    pillars_def = load_pillars_definitions()
+    if not pillars_def:
+        return None
+    
+    wefe_pillars_def = pillars_def.get('wefe_pillars', {})
+    indicators_to_invert = get_indicators_to_invert()
+    
+    pillar_columns = ['Water', 'Energy', 'Food', 'Ecosystems']
+    pillar_keys = ['water', 'energy', 'food', 'ecosystems']
+    
+    # Collect indicators for each pillar in order
+    pillar_indicators = {}
+    for pillar_key in pillar_keys:
+        pillar_def = wefe_pillars_def.get(pillar_key, {})
+        indicators_list = []
+        
+        for category_name, category_def in pillar_def.get('categories', {}).items():
+            for indicator_name, indicator_def in category_def.get('indicators', {}).items():
+                indicators_list.append({
+                    'key': indicator_name,
+                    'name': indicator_def.get('name', indicator_name.replace('_', ' ').title()),
+                    'min_value': indicator_def.get('min_value'),
+                    'max_value': indicator_def.get('max_value'),
+                    'category': category_name
+                })
+        
+        pillar_indicators[pillar_key] = indicators_list
+    
+    # Calculate policy improvements for each indicator
+    policies_by_title = {p['title']: p for p in load_policies()}
+    indicator_improvements = {}  # indicator_key -> total percentage improvement
+    
+    def _parse_change(raw):
+        if raw is None:
+            return 0
+        if isinstance(raw, (int, float)):
+            return float(raw)
+        try:
+            s = str(raw).strip()
+            if s.endswith('%'):
+                return float(s.replace('%', ''))
+            return float(s)
+        except Exception:
+            return 0
+    
+    # Calculate total improvements for each indicator
+    for policy_title in selected_policy_titles:
+        policy_obj = policies_by_title.get(policy_title)
+        if not policy_obj:
+            continue
+        for coll_key in ('synergies', 'trade_offs'):
+            for item in policy_obj.get(coll_key, []) or []:
+                for ind in (item.get('affected_indicators') or []):
+                    indicator_key = ind.get('indicator')
+                    change_value = _parse_change(ind.get('expected_change'))
+                    if indicator_key:
+                        if indicator_key not in indicator_improvements:
+                            indicator_improvements[indicator_key] = 0
+                        indicator_improvements[indicator_key] += change_value
+    
+    # Find the maximum number of indicators across all pillars
+    max_indicators = max(len(indicators) for indicators in pillar_indicators.values())
+    
+    # Create parallel rows (Indicator 1, Indicator 2, etc.)
+    heatmap_matrix = []
+    indicator_rows = []
+    
+    for i in range(max_indicators):
+        row_values = []
+        indicator_rows.append(f"Indicator {i+1}")
+        
+        # For each pillar, get the i-th indicator if it exists
+        for pillar_key in pillar_keys:
+            indicators_list = pillar_indicators[pillar_key]
+            
+            if i < len(indicators_list):
+                # Get the indicator data
+                indicator_info = indicators_list[i]
+                indicator_name = indicator_info['key']
+                
+                # Get the actual value from living lab data
+                pillar_data = lab_info['wefe_pillars'].get(pillar_key, {})
+                indicator_value = None
+                
+                for category_name, category_data in pillar_data.get('indicators', {}).items():
+                    if isinstance(category_data, dict) and indicator_name in category_data:
+                        indicator_value = category_data[indicator_name]
+                        break
+                
+                # Apply improvements and normalize the value if found
+                if indicator_value is not None:
+                    # Apply percentage improvement to the raw value
+                    improvement_percent = indicator_improvements.get(indicator_name, 0)
+                    improved_value = indicator_value + (indicator_value * improvement_percent / 100)
+                    
+                    min_val = indicator_info['min_value']
+                    max_val = indicator_info['max_value']
+                    should_invert = indicator_name in indicators_to_invert
+                    
+                    normalized_value = normalize_indicator(improved_value, min_val, max_val, invert=should_invert)
+                    if normalized_value is not None:
+                        # Clamp to 0-100 range
+                        normalized_value = max(0, min(100, normalized_value))
+                        row_values.append(normalized_value)
+                    else:
+                        row_values.append(np.nan)
+                else:
+                    row_values.append(np.nan)
+            else:
+                # This pillar doesn't have an i-th indicator
+                row_values.append(np.nan)
+        
+        heatmap_matrix.append(row_values)
+    
+    # Convert to numpy array
+    heatmap_array = np.array(heatmap_matrix)
+    
+    # Create custom hover text that shows the actual indicator names
+    hover_text = []
+    for i in range(max_indicators):
+        hover_row = []
+        for pillar_key in pillar_keys:
+            indicators_list = pillar_indicators[pillar_key]
+            if i < len(indicators_list):
+                indicator_name = indicators_list[i]['name']
+                hover_row.append(indicator_name)
+            else:
+                hover_row.append("No indicator")
+        hover_text.append(hover_row)
+    
+    # Create the heatmap using plotly
+    fig = go.Figure(data=go.Heatmap(
+        z=heatmap_array,
+        x=pillar_columns,
+        y=indicator_rows,
+        text=hover_text,
+        colorscale=[
+            [0.0, '#d32f2f'],    # Red for low values
+            [0.5, '#ffc107'],    # Yellow for medium values  
+            [1.0, '#4caf50']     # Green for high values
+        ],
+        colorbar=dict(
+            title="Normalized Score<br>(0-100)<br>After Improvements"
+        ),
+        hoverongaps=False,
+        hovertemplate='<b>%{text}</b><br>' +
+                      '<b>%{x} Pillar</b><br>' +
+                      'Improved Score: %{z:.1f}<br>' +
+                      '<extra></extra>',
+        zmin=0,
+        zmax=100
+    ))
+    
+    fig.update_layout(
+        title="WEFE Indicators Evaluation Heatmap - After Policy Improvements",
+        xaxis_title="WEFE Pillars",
+        yaxis_title="Indicator Position",
+        height=max(400, max_indicators * 30),  # Dynamic height based on number of indicator positions
+        margin=dict(l=100, r=100, t=60, b=50)
+    )
+    
+    return fig
+
+def create_and_display_indicator_table(lab_info, selected_policy_titles):
+    """Create and display the indicator table showing policy impacts on indicators"""
+    # Build the indicators list and an index to map indicator -> row name
+    all_indicator_rows: List[str] = []
+    indicator_to_row: Dict[str, str] = {}
+    wefe = lab_info.get('wefe_pillars', {}) or {}
+    for pillar_key, pillar_obj in wefe.items():
+        indicators_obj = (pillar_obj or {}).get('indicators', {}) or {}
+        for category_key, indicator_group in indicators_obj.items():
+            if isinstance(indicator_group, dict):
+                for indicator_key in indicator_group.keys():
+                    row_name = f"{pillar_key} / {category_key} / {indicator_key}"
+                    all_indicator_rows.append(row_name)
+                    indicator_to_row[indicator_key] = row_name
+    policies_by_title = {p['title']: p for p in load_policies()}
+
+    if not all_indicator_rows:
+        st.info("No indicators available for this living lab.")
+    elif not selected_policy_titles:
+        st.info("No policies selected. Add policies to populate table columns.")
+    else:
+        # First, find which indicators are actually influenced by the selected policies
+        influenced_indicators: set[str] = set()
+        for policy_title in selected_policy_titles:
+            policy_obj = policies_by_title.get(policy_title)
+            if not policy_obj:
+                continue
+            for coll_key in ('synergies', 'trade_offs'):
+                for item in policy_obj.get(coll_key, []) or []:
+                    for ind in (item.get('affected_indicators') or []):
+                        indicator_key = ind.get('indicator')
+                        if indicator_key and indicator_key in indicator_to_row:
+                            influenced_indicators.add(indicator_key)
+        
+        # Filter to only include indicators that are influenced by at least one policy
+        indicator_rows = [indicator_to_row[ind_key] for ind_key in influenced_indicators 
+                         if ind_key in indicator_to_row]
+        
+        if not indicator_rows:
+            st.info("No indicators are influenced by the selected policies.")
+        else:
+            def _parse_change(raw: Any) -> float:
+                if raw is None:
+                    return 0
+                if isinstance(raw, (int, float)):
+                    return float(raw)
+                try:
+                    s = str(raw).strip()
+                    # Remove any units except % and sign
+                    if s.endswith('%'):
+                        return float(s.replace('%', ''))
+                    # Fallback: extract leading signed float
+                    return float(s)
+                except Exception:
+                    return 0
+
+            # Create a zero-filled table with indicators as rows and applied policies as columns
+            # Add % to policy column names to indicate they are percentages
+            policy_columns_with_percent = [f"{title} (%)" for title in selected_policy_titles]
+            value_table = pd.DataFrame(0, index=indicator_rows, columns=policy_columns_with_percent)
+
+            # Fill each policy column based on its synergies and trade-offs
+            for idx, policy_title in enumerate(selected_policy_titles):
+                policy_column = policy_columns_with_percent[idx]
+                policy_obj = policies_by_title.get(policy_title)
+                if not policy_obj:
+                    continue
+                for coll_key in ('synergies', 'trade_offs'):
+                    for item in policy_obj.get(coll_key, []) or []:
+                        for ind in (item.get('affected_indicators') or []):
+                            indicator_key = ind.get('indicator')
+                            change_value = _parse_change(ind.get('expected_change'))
+                            row_name = indicator_to_row.get(indicator_key)
+                            if row_name is not None and row_name in value_table.index:
+                                current_value = value_table.at[row_name, policy_column]
+                                new_value = current_value + change_value
+                                value_table.at[row_name, policy_column] = round(new_value, 2)
+
+            # Add Actual Value column from living lab data
+            actual_values = []
+            for row_name in indicator_rows:
+                # Parse the row name to extract pillar, category, and indicator
+                parts = row_name.split(' / ')
+                if len(parts) == 3:
+                    pillar_key, category_key, indicator_key = parts
+                    try:
+                        actual_value = wefe[pillar_key]['indicators'][category_key][indicator_key]
+                        actual_values.append(round(actual_value, 2))
+                    except (KeyError, TypeError):
+                        actual_values.append(0.00)
+                else:
+                    actual_values.append(0.00)
+            
+            value_table.insert(0, 'Actual Value', actual_values)
+            # Ensure Actual Value column is properly rounded
+            value_table['Actual Value'] = value_table['Actual Value'].round(2)
+
+            # Ensure all policy columns are properly rounded
+            for col in policy_columns_with_percent:
+                value_table[col] = value_table[col].round(2)
+
+            # Add Total Improvement column (%) summing across the policy columns and round to 2 decimals
+            total_improvements = value_table[policy_columns_with_percent].sum(axis=1)
+            value_table['Total Improvement (%)'] = total_improvements.round(2)
+            
+            # Add Value of Improvement column (concrete values calculated from percentages)
+            value_of_improvement = []
+            for idx, actual_val in enumerate(actual_values):
+                total_improvement_percent = value_table.iloc[idx]['Total Improvement (%)']
+                concrete_improvement = (actual_val * total_improvement_percent) / 100
+                value_of_improvement.append(round(concrete_improvement, 2))
+            
+            value_table['Value of Improvement'] = value_of_improvement
+            
+            # Add Final State column (actual + concrete improvement) and round to 2 decimals
+            final_states = value_table['Actual Value'] + value_table['Value of Improvement']
+            value_table['Final State'] = final_states.round(2)
+            
+            # Force all numeric columns to have exactly 2 decimal places by converting to float and rounding
+            numeric_columns = ['Actual Value', 'Total Improvement (%)', 'Value of Improvement', 'Final State'] + policy_columns_with_percent
+            for col in numeric_columns:
+                if col in value_table.columns:
+                    value_table[col] = value_table[col].astype(float).round(2)
+
+            # Style cells with different logic per column type
+            def _style_cell(val, row_idx, col_name):
+                try:
+                    num = float(val)
+                except Exception:
+                    return ''
+                
+                # Don't style the Actual Value column (neutral)
+                if col_name == 'Actual Value':
+                    return 'background-color: #f8f9fa; color: #495057'
+                
+                # Style Value of Improvement: green if positive, red if negative
+                if col_name == 'Value of Improvement':
+                    if num > 0:
+                        return 'background-color: #e8f5e9; color: #1b5e20'
+                    elif num < 0:
+                        return 'background-color: #ffebee; color: #b71c1c'
+                    else:
+                        return 'background-color: #f8f9fa; color: #495057'
+                
+                # Style Final State: green if > actual value, red if < actual value
+                if col_name == 'Final State':
+                    # We need to get the actual value for this row to compare
+                    if row_idx is not None:
+                        try:
+                            actual_val = float(value_table.iloc[row_idx]['Actual Value'])
+                            if num > actual_val:
+                                return 'background-color: #e8f5e9; color: #1b5e20'
+                            elif num < actual_val:
+                                return 'background-color: #ffebee; color: #b71c1c'
+                            else:
+                                return 'background-color: #f8f9fa; color: #495057'
+                        except:
+                            return 'background-color: #e3f2fd; color: #1565c0'
+                    else:
+                        return 'background-color: #e3f2fd; color: #1565c0'
+                
+                # Style policy columns and Total Improvement with green/red based on value
+                if num > 0:
+                    return 'background-color: #e8f5e9; color: #1b5e20'
+                if num < 0:
+                    return 'background-color: #ffebee; color: #b71c1c'
+                return ''
+
+            # Create format dictionary for all columns
+            format_dict = {}
+            for col in value_table.columns:
+                if col in ['Actual Value', 'Value of Improvement', 'Final State']:
+                    format_dict[col] = "{:.2f}"
+                else:  # All percentage columns
+                    format_dict[col] = "{:.2f}%"
+            
+            # Apply styling with comprehensive formatting
+            styled = value_table.style.format(format_dict)
+            
+            # Apply cell styling with row index for Final State comparison
+            def apply_styling(df):
+                styled_df = pd.DataFrame('', index=df.index, columns=df.columns)
+                for row_idx in range(len(df)):
+                    for col in df.columns:
+                        styled_df.iloc[row_idx, styled_df.columns.get_loc(col)] = _style_cell(df.iloc[row_idx, df.columns.get_loc(col)], row_idx, col)
+                return styled_df
+            
+            styled = styled.apply(apply_styling, axis=None)
+            st.dataframe(styled, use_container_width=True)
+
 def render_policy_tab():
     """Main function to render the entire policy tab"""
-    
     
     col1, col2 = st.columns(2)
     with col1:
         st.subheader(f"Policy View - {st.session_state.selected_lab}")
-        # Load policies
-        policies = load_policies()
         
+        policies = load_policies()
         if not policies:
             st.error("No policies available!")
-            return
+            return        
         
-        # Get policy categories
         categories = get_policy_categories(policies)
-        
-        # Category selection
         selected_category = st.selectbox(
             "Select Policy Category:",
             categories,
             key="policy_category_select"
         )
-        
         if selected_category:
-            # Get policies for selected category
             category_policies = get_policies_by_category(policies, selected_category)
-            
             if category_policies:                
                 for policy in category_policies:
                     render_policy_details(policy)
@@ -395,10 +750,9 @@ def render_policy_tab():
                 st.info(f"No policies found in the {selected_category} category.")
         else:
             st.info("Please select a policy category to view available policies.")
-        # --- Selected Policies
+            
         st.markdown("### Selected Policies")
         selected_titles = st.session_state.get('selected_policies', [])
-        # Build quick lookup map for colors/policy types
         policies_by_title = {p['title']: p for p in load_policies()}
         if selected_titles:
             for sel_title in selected_titles:
@@ -419,195 +773,53 @@ def render_policy_tab():
                         st.rerun()
         else:
             st.info("No policies selected yet.")
+            
     with col2:
-        
-
         selected_lab_name = st.session_state.get('selected_lab')
         lab_info = get_selected_lab_info(selected_lab_name) if selected_lab_name else None
         if lab_info and 'wefe_pillars' in lab_info:
-            # Create and display radar plot
-            # radar_fig = create_wefe_radar_plot(lab_info, selected_lab_name)
-            # if radar_fig:
-            #     st.plotly_chart(radar_fig, use_container_width=True)
-
-            # Heatmap
-            heatmap_fig = create_indicators_heatmap(lab_info)
-            if heatmap_fig:
-                st.plotly_chart(heatmap_fig, use_container_width=True)
-            else:
-                st.info("Heatmap data not available for the selected living lab.")
-
+            # Check for selected policies once and pass to both functions
+            selected_policies = st.session_state.get('selected_policies', [])
             
-
-            # Build the subpillars list and an index to map indicator -> row name
-            subpillar_rows: List[str] = []
-            indicator_to_row: Dict[str, str] = {}
-            wefe = lab_info.get('wefe_pillars', {}) or {}
-            for pillar_key, pillar_obj in wefe.items():
-                indicators_obj = (pillar_obj or {}).get('indicators', {}) or {}
-                for category_key, indicator_group in indicators_obj.items():
-                    if isinstance(indicator_group, dict):
-                        for indicator_key in indicator_group.keys():
-                            row_name = f"{pillar_key} / {category_key} / {indicator_key}"
-                            subpillar_rows.append(row_name)
-                            indicator_to_row[indicator_key] = row_name
-
-            selected_policy_titles: List[str] = st.session_state.get('selected_policies', []) or []
-
-            if not subpillar_rows:
-                st.info("No subpillars available for this living lab.")
-            elif not selected_policy_titles:
-                st.info("No policies selected. Add policies to populate table columns.")
-            else:
-                # Helper to parse expected_change values (e.g., "+10%", "-3", 5)
-                def _parse_change(raw: Any) -> float:
-                    if raw is None:
-                        return 0
-                    if isinstance(raw, (int, float)):
-                        return float(raw)
-                    try:
-                        s = str(raw).strip()
-                        # Remove any units except % and sign
-                        if s.endswith('%'):
-                            return float(s.replace('%', ''))
-                        # Fallback: extract leading signed float
-                        return float(s)
-                    except Exception:
-                        return 0
-
-                # Create a zero-filled table with subpillars as rows and applied policies as columns
-                # Add % to policy column names to indicate they are percentages
-                policy_columns_with_percent = [f"{title} (%)" for title in selected_policy_titles]
-                value_table = pd.DataFrame(0, index=subpillar_rows, columns=policy_columns_with_percent)
-
-                # Fill each policy column based on its synergies and trade-offs
-                for idx, policy_title in enumerate(selected_policy_titles):
-                    policy_column = policy_columns_with_percent[idx]
-                    policy_obj = policies_by_title.get(policy_title)
-                    if not policy_obj:
-                        continue
-                    for coll_key in ('synergies', 'trade_offs'):
-                        for item in policy_obj.get(coll_key, []) or []:
-                            for ind in (item.get('affected_indicators') or []):
-                                indicator_key = ind.get('indicator')
-                                change_value = _parse_change(ind.get('expected_change'))
-                                row_name = indicator_to_row.get(indicator_key)
-                                if row_name is not None and row_name in value_table.index:
-                                    current_value = value_table.at[row_name, policy_column]
-                                    new_value = current_value + change_value
-                                    value_table.at[row_name, policy_column] = round(new_value, 2)
-
-                # Add Actual Value column from living lab data
-                actual_values = []
-                for row_name in subpillar_rows:
-                    # Parse the row name to extract pillar, category, and indicator
-                    parts = row_name.split(' / ')
-                    if len(parts) == 3:
-                        pillar_key, category_key, indicator_key = parts
-                        try:
-                            actual_value = wefe[pillar_key]['indicators'][category_key][indicator_key]
-                            actual_values.append(round(actual_value, 2))
-                        except (KeyError, TypeError):
-                            actual_values.append(0.00)
-                    else:
-                        actual_values.append(0.00)
-                
-                value_table.insert(0, 'Actual Value', actual_values)
-                # Ensure Actual Value column is properly rounded
-                value_table['Actual Value'] = value_table['Actual Value'].round(2)
-
-                # Ensure all policy columns are properly rounded
-                for col in policy_columns_with_percent:
-                    value_table[col] = value_table[col].round(2)
-
-                # Add Total Improvement column (%) summing across the policy columns and round to 2 decimals
-                total_improvements = value_table[policy_columns_with_percent].sum(axis=1)
-                value_table['Total Improvement (%)'] = total_improvements.round(2)
-                
-                # Add Value of Improvement column (concrete values calculated from percentages)
-                value_of_improvement = []
-                for idx, actual_val in enumerate(actual_values):
-                    total_improvement_percent = value_table.iloc[idx]['Total Improvement (%)']
-                    concrete_improvement = (actual_val * total_improvement_percent) / 100
-                    value_of_improvement.append(round(concrete_improvement, 2))
-                
-                value_table['Value of Improvement'] = value_of_improvement
-                
-                # Add Final State column (actual + concrete improvement) and round to 2 decimals
-                final_states = value_table['Actual Value'] + value_table['Value of Improvement']
-                value_table['Final State'] = final_states.round(2)
-                
-                # Force all numeric columns to have exactly 2 decimal places by converting to float and rounding
-                numeric_columns = ['Actual Value', 'Total Improvement (%)', 'Value of Improvement', 'Final State'] + policy_columns_with_percent
-                for col in numeric_columns:
-                    if col in value_table.columns:
-                        value_table[col] = value_table[col].astype(float).round(2)
-
-                # Style cells with different logic per column type
-                def _style_cell(val, row_idx, col_name):
-                    try:
-                        num = float(val)
-                    except Exception:
-                        return ''
-                    
-                    # Don't style the Actual Value column (neutral)
-                    if col_name == 'Actual Value':
-                        return 'background-color: #f8f9fa; color: #495057'
-                    
-                    # Style Value of Improvement: green if positive, red if negative
-                    if col_name == 'Value of Improvement':
-                        if num > 0:
-                            return 'background-color: #e8f5e9; color: #1b5e20'
-                        elif num < 0:
-                            return 'background-color: #ffebee; color: #b71c1c'
-                        else:
-                            return 'background-color: #f8f9fa; color: #495057'
-                    
-                    # Style Final State: green if > actual value, red if < actual value
-                    if col_name == 'Final State':
-                        # We need to get the actual value for this row to compare
-                        if row_idx is not None:
-                            try:
-                                actual_val = float(value_table.iloc[row_idx]['Actual Value'])
-                                if num > actual_val:
-                                    return 'background-color: #e8f5e9; color: #1b5e20'
-                                elif num < actual_val:
-                                    return 'background-color: #ffebee; color: #b71c1c'
-                                else:
-                                    return 'background-color: #f8f9fa; color: #495057'
-                            except:
-                                return 'background-color: #e3f2fd; color: #1565c0'
-                        else:
-                            return 'background-color: #e3f2fd; color: #1565c0'
-                    
-                    # Style policy columns and Total Improvement with green/red based on value
-                    if num > 0:
-                        return 'background-color: #e8f5e9; color: #1b5e20'
-                    if num < 0:
-                        return 'background-color: #ffebee; color: #b71c1c'
-                    return ''
-
-                # Create format dictionary for all columns
-                format_dict = {}
-                for col in value_table.columns:
-                    if col in ['Actual Value', 'Value of Improvement', 'Final State']:
-                        format_dict[col] = "{:.2f}"
-                    else:  # All percentage columns
-                        format_dict[col] = "{:.2f}%"
-                
-                # Apply styling with comprehensive formatting
-                styled = value_table.style.format(format_dict)
-                
-                # Apply cell styling with row index for Final State comparison
-                def apply_styling(df):
-                    styled_df = pd.DataFrame('', index=df.index, columns=df.columns)
-                    for row_idx in range(len(df)):
-                        for col in df.columns:
-                            styled_df.iloc[row_idx, styled_df.columns.get_loc(col)] = _style_cell(df.iloc[row_idx, df.columns.get_loc(col)], row_idx, col)
-                    return styled_df
-                
-                styled = styled.apply(apply_styling, axis=None)
-                st.dataframe(styled, use_container_width=True)
+            # Display controls
+            st.markdown("### Display Options")
+            col_check1, col_check2, col_check3 = st.columns(3)
+            
+            with col_check1:
+                show_original = st.checkbox("Show Original Heatmap", value=True, key="show_original_heatmap")
+            
+            with col_check2:
+                # Only enable improved heatmap checkbox if policies are selected
+                show_improved = st.checkbox(
+                    "Show Improved Heatmap", 
+                    value=bool(selected_policies), 
+                    disabled=not bool(selected_policies),
+                    key="show_improved_heatmap",
+                    help="Select policies to enable this option"
+                )
+            
+            with col_check3:
+                show_table = st.checkbox("Show Policy Impact Table", value=True, key="show_policy_table")
+            
+            # Display original heatmap if selected
+            if show_original:
+                heatmap_fig = create_indicators_heatmap(lab_info)
+                if heatmap_fig:
+                    st.plotly_chart(heatmap_fig, use_container_width=True)
+                else:
+                    st.info("Original heatmap data not available for the selected living lab.")
+            
+            # Display policy impact table if selected
+            if show_table:
+                create_and_display_indicator_table(lab_info, selected_policies)
+            
+            # Display improved heatmap if selected and policies are available
+            if show_improved and selected_policies:
+                improved_heatmap_fig = create_improved_indicators_heatmap(lab_info, selected_policies)
+                if improved_heatmap_fig:
+                    st.plotly_chart(improved_heatmap_fig, use_container_width=True)
+                else:
+                    st.info("Unable to generate improved heatmap.")
         else:
             st.info("WEFE scores not available for the selected living lab.")
 			
