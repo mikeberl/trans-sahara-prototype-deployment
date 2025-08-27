@@ -2,12 +2,8 @@ import streamlit as st
 import plotly.graph_objects as go
 import numpy as np
 import streamviz
-from typing import Dict, List
-from src.core.wefe_calculations import PILLARS, calculate_all_pillar_scores, normalize_indicator, get_indicators_to_invert
-from src.policy.data import load_policies, load_pillars_definitions, infer_policy_pillar, parse_change_value, get_indicator_with_number
-
-
-# create_wefe_radar_plot removed - was not being used
+from src.core.wefe_calculations import normalize_indicator, get_indicators_to_invert
+from src.policy.data import load_policies, load_pillars_definitions, parse_change_value
 
 
 def create_indicators_heatmap(lab_info):

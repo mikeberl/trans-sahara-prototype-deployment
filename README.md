@@ -1,99 +1,94 @@
 # WEFE Nexus DSS: Policy & Intervention Simulator
 
-A modular Streamlit application for simulating water-energy-food-ecosystem (WEFE) nexus policies and interventions.
+A modular Streamlit application for exploring water–energy–food–ecosystems (WEFE) policies and interventions on Living Labs.
 
 ## Project Structure
 
-The application has been refactored into a modular structure for better maintainability:
-
 ```
-├── app.py                 # Main entry point
-├── utils.py              # Shared utilities and functions
-├── initial_page.py       # Initial setup and configuration
-├── policy_tab.py         # Policy view functionality
-├── intervention_tab.py   # Intervention view functionality
-├── policies.py           # Policy data (existing)
-├── interventions.py      # Intervention data (existing)
-├── policies.json         # Policy details (existing)
-└── livinglab.json       # Living lab data (existing)
+trans-sahara-prototype-deployment/
+├── app.py                          # Main Streamlit entry point
+├── requirements.txt                # Python dependencies
+├── assets/                         # Images and static assets
+│   └── *.jpg
+├── data/
+│   ├── policies.json               # Policy catalogue
+│   ├── pillars.json                # Pillar/indicator definitions (names, units, bounds)
+│   ├── livinglab.json              # Living Lab data (scores/values per indicator)
+│   └── interventions/              # Intervention definitions used by simulation
+│       └── *_intervention.json
+└── src/
+    ├── core/
+    │   ├── data_loader.py          # Low-level data loading helpers
+    │   ├── intervention_optimizer.py# Policy simulation / intervention selection
+    │   └── wefe_calculations.py    # Scoring, normalization, utilities
+    ├── pages/
+    │   ├── initial_page.py         # Welcome view, Living Lab details, pillar visuals
+    │   ├── policy_tab.py           # Policy list, selection, indicator search
+    │   └── intervention_tab.py     # Selected interventions summary
+    └── policy/
+        ├── data.py                 # Policy data helpers and indicator utilities
+        ├── ui.py                   # Policy UI widgets and indicator impact table
+        └── visualization.py        # Heatmaps and scoring visuals
 ```
 
-## File Descriptions
+## Key Features
 
-### `app.py`
-- **Main entry point** for the Streamlit application
-- Handles page configuration and session state initialization
-- Coordinates between different components
-- Manages the tab structure
+- Indicator numbering across the app:
+  - Living Lab indicator lists (in `initial_page.py`)
+  - Policy impact table (in `policy/ui.py`)
+  - Policy search by indicator (in `pages/policy_tab.py`)
+  - Heatmaps (in `policy/visualization.py`) show numbered rows and numbers in hover text
+- Search by indicator (Policy tab):
+  - Toggle "Search by Indicator" to switch from category filter to an indicator dropdown
+  - Indicators are listed with numbers (e.g., `03. basic_drinking_water_services`)
+  - Results show policies that improve the selected indicator
+  - Policies are ordered by improvement magnitude (ascending)
+- WEFE score comparison gauges and before/after heatmaps
+- Simulation pipeline that maps policy choices to recommended interventions
 
-### `utils.py`
-- **Shared utilities** and helper functions
-- Data loading functions (`load_living_labs`, `get_regions_from_labs`)
-- Session state management (`initialize_session_state`)
-- Simulation functions (`run_policy_simulation`)
-- Data processing functions (`calculate_overall_score`, `get_detailed_scores`)
+## How Indicator Numbering Works
 
-### `initial_page.py`
-- **Initial setup interface** before the main session starts
-- Sidebar configuration for living lab selection
-- Indicator weight settings
-- Budget and time range configuration
-- Welcome page when session hasn't started
-- **Interactive map** showing all living lab areas as colored squares
-  - Red squares for unselected labs
-  - Blue square for the selected lab
-  - Popup information for each lab area
+- Indicator metadata is sourced from `data/pillars.json`.
+- A consistent numbering map is built at runtime and applied wherever indicators are displayed.
+- Example display: `07. renewable_electricity_output`.
 
-### `policy_tab.py`
-- **Policy management functionality**
-- Policy selection and addition interface
-- Detailed policy configuration and display
-- Simulation execution
-- Results visualization with detailed scores
+## Run Locally
 
-### `intervention_tab.py`
-- **Intervention management functionality**
-- Intervention suggestion display
-- Add/remove/replace intervention controls
-- Progress tracking
-- Map visualization
-
-## Benefits of This Structure
-
-1. **Modularity**: Each component has a single responsibility
-2. **Maintainability**: Easier to modify individual features
-3. **Reusability**: Functions can be reused across components
-4. **Testability**: Individual components can be tested separately
-5. **Clarity**: Clear separation of concerns
-
-## Dependencies
-
-The application requires the following Python packages:
-
+1) Install dependencies:
 ```bash
 pip install -r requirements.txt
 ```
 
-Or install manually:
-```bash
-pip install streamlit pandas numpy folium
-```
-
-## Running the Application
-
-To run the application, use:
-
+2) Launch the app:
 ```bash
 streamlit run app.py
 ```
 
-## Migration from Original Structure
+## Usage Tips
 
-The original `prototype.py` file has been split into:
-- Main app logic → `app.py`
-- Initial setup → `initial_page.py`
-- Policy functionality → `policy_tab.py`
-- Intervention functionality → `intervention_tab.py`
-- Shared functions → `utils.py`
+- Start on the initial page: select a Living Lab and review pillar indicators (now numbered).
+- Open the Policy tab:
+  - Use category filter or enable "Search by Indicator" to find policies improving a specific indicator.
+  - Add policies to your selection; the impact table shows numbered indicators with improvements.
+  - Run the simulation to produce recommended interventions.
+- Heatmaps: numbered indicator rows with hover text showing the indicator number and name.
 
-All functionality remains the same, but the code is now more organized and maintainable. 
+## Code Pointers
+
+- Indicator numbering utilities: `src/policy/data.py`
+- Search-by-indicator logic and sorting: `src/policy/data.py` and `src/pages/policy_tab.py`
+- Living Lab indicator display: `src/pages/initial_page.py`
+- Policy impact table: `src/policy/ui.py`
+- Heatmaps: `src/policy/visualization.py`
+
+## Data Files
+
+- `data/pillars.json`: Definitions for indicators (names, units, min/max), grouped by pillar and category
+- `data/livinglab.json`: Living Lab entries and indicator values
+- `data/policies.json`: Policies with synergies/trade-offs and affected indicators
+- `data/interventions/*.json`: Intervention definitions used by the optimizer
+
+## Requirements
+
+- Python 3.10+
+- Streamlit-compatible environment (browser access to the local server) 
