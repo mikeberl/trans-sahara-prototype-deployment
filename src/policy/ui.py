@@ -257,7 +257,6 @@ def render_selected_policies_section(selected_policies):
 
 def render_display_controls(selected_policies):
     """Render the display control checkboxes"""
-    st.markdown("### Display Options")
     col_check1, col_check2 = st.columns(2)
     
     with col_check1:
