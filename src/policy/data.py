@@ -90,3 +90,36 @@ def parse_change_value(raw: Any) -> float:
         return float(s)
     except Exception:
         return 0
+
+
+def get_all_indicators() -> List[str]:
+    """Get all available indicators from pillars definitions"""
+    pillars = load_pillars_definitions()
+    indicators = []
+    
+    for pillar_data in pillars.get('wefe_pillars', {}).values():
+        for category_data in pillar_data.get('categories', {}).values():
+            for indicator_key in category_data.get('indicators', {}).keys():
+                indicators.append(indicator_key)
+    
+    return sorted(indicators)
+
+
+def get_policies_by_indicator(policies: List[Dict], indicator: str) -> List[Dict]:
+    """Get policies that provide improvement (synergy) to a specific indicator"""
+    improving_policies = []
+    
+    for policy in policies:
+        # Check synergies for positive changes to the indicator
+        for synergy in policy.get('synergies', []):
+            for affected_ind in synergy.get('affected_indicators', []):
+                if affected_ind.get('indicator') == indicator:
+                    change_value = parse_change_value(affected_ind.get('expected_change'))
+                    # Check if the change is positive (improvement)
+                    if change_value > 0:
+                        improving_policies.append(policy)
+                        break  # Found this policy improves the indicator, no need to check more synergies
+            if policy in improving_policies:
+                break  # Already found this policy improves the indicator
+    
+    return improving_policies

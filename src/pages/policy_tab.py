@@ -1,7 +1,7 @@
 import streamlit as st
 import os
 from src.pages.initial_page import get_selected_lab_info
-from src.policy.data import get_policy_categories, get_policies_by_category, load_policies
+from src.policy.data import get_policy_categories, get_policies_by_category, load_policies, get_all_indicators, get_policies_by_indicator
 from src.policy.visualization import create_indicators_heatmap, create_improved_indicators_heatmap, create_and_display_gauge_scoring
 from src.policy.ui import (
     render_policy_details, 
@@ -10,7 +10,6 @@ from src.policy.ui import (
     render_display_controls
 )
 from src.core.intervention_optimizer import run_policy_simulation
-
 
 
 def render_policy_tab():
@@ -23,23 +22,50 @@ def render_policy_tab():
         policies = load_policies()
         if not policies:
             st.error("No policies available!")
-            return        
+            return
         
-        categories = get_policy_categories(policies)
-        selected_category = st.selectbox(
-            "Select Policy Category:",
-            categories,
-            key="policy_category_select"
-        )
-        if selected_category:
-            category_policies = get_policies_by_category(policies, selected_category)
-            if category_policies:                
-                for policy in category_policies:
-                    render_policy_details(policy)
+        # Add checkbox for search by indicator
+        search_by_indicator = st.checkbox("🔍 Search by Indicator", key="search_by_indicator_checkbox")
+        
+        if search_by_indicator:
+            # Show indicator selection instead of category selection
+            all_indicators = get_all_indicators()
+            selected_indicator = st.selectbox(
+                "Select Indicator to Search:",
+                all_indicators,
+                key="indicator_select",
+                help="Select an indicator to find policies that improve it"
+            )
+            
+            if selected_indicator:
+                # Get policies that improve the selected indicator
+                improving_policies = get_policies_by_indicator(policies, selected_indicator)
+                
+                if improving_policies:
+                    st.success(f"Found {len(improving_policies)} policies that improve '{selected_indicator}'")
+                    for policy in improving_policies:
+                        render_policy_details(policy)
+                else:
+                    st.info(f"No policies found that improve the '{selected_indicator}' indicator.")
             else:
-                st.info(f"No policies found in the {selected_category} category.")
+                st.info("Please select an indicator to search for improving policies.")
         else:
-            st.info("Please select a policy category to view available policies.")
+            # Original category-based filtering
+            categories = get_policy_categories(policies)
+            selected_category = st.selectbox(
+                "Select Policy Category:",
+                categories,
+                key="policy_category_select"
+            )
+            if selected_category:
+                category_policies = get_policies_by_category(policies, selected_category)
+                if category_policies:                
+                    for policy in category_policies:
+                        render_policy_details(policy)
+                else:
+                    st.info(f"No policies found in the {selected_category} category.")
+            else:
+                st.info("Please select a policy category to view available policies.")
             
         selected_policies = st.session_state.get('selected_policies', [])
         render_selected_policies_section(selected_policies)
@@ -62,16 +88,11 @@ def render_policy_tab():
             
             show_heatmaps, show_table = render_display_controls(selected_policies)
             
-            # Display gauge charts
             st.markdown("---")
             st.subheader("WEFE Score Comparison")
             create_and_display_gauge_scoring(lab_info, selected_policies)
-            
-            # Display heatmaps side by side
 
-            
             if show_heatmaps:
-                st.markdown("---")
                 
                 heatmap_col1, heatmap_col2 = st.columns(2)
                 
@@ -93,7 +114,6 @@ def render_policy_tab():
                         st.markdown("**After Policy Improvements**")
                         st.info("Select policies to see improvements")
             
-            # Display policy impact table if selected
             if show_table:
                 create_and_display_indicator_table(lab_info, selected_policies)            
         else:

@@ -375,13 +375,6 @@ def format_indicator_with_unit(indicator_name, value, units_dict=None):
 def calculate_new_wefe_score_after_policies(lab_info, selected_policies):
     """
     Calculate the new WEFE score after applying selected policies to indicators
-    
-    Args:
-        lab_info: Complete living lab data
-        selected_policies: List of selected policy titles
-    
-    Returns:
-        New overall WEFE score (0-100) or None if calculation fails
     """
     if not lab_info or 'wefe_pillars' not in lab_info or not selected_policies:
         return None
