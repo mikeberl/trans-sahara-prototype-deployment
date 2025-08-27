@@ -1,6 +1,7 @@
 import streamlit as st
 import plotly.graph_objects as go
 import numpy as np
+import streamviz
 from typing import Dict, List
 from src.core.wefe_calculations import PILLARS, calculate_all_pillar_scores, normalize_indicator, get_indicators_to_invert
 from src.policy.data import load_policies, load_pillars_definitions, infer_policy_pillar, parse_change_value
@@ -275,3 +276,63 @@ def create_improved_indicators_heatmap(lab_info, selected_policy_titles):
     )
     
     return fig
+
+
+def create_and_display_gauge_scoring(lab_info, selected_policies):
+    """
+    Create and display gauge charts for WEFE score comparison before and after policies
+    """
+    if not lab_info or 'wefe_pillars' not in lab_info:
+        return None, None
+    
+    try:
+        # Import here to avoid circular imports
+        from src.core.wefe_calculations import calculate_overall_wefe_score, calculate_new_wefe_score_after_policies
+        
+        original_score, _ = calculate_overall_wefe_score(lab_info)
+        new_score = calculate_new_wefe_score_after_policies(lab_info, selected_policies) if selected_policies else None
+        
+        if original_score is not None:
+            col1, col2 = st.columns(2)
+            
+            with col1:
+                st.markdown("**Original Score**")
+                streamviz.gauge(
+                    original_score / 100, 
+                    gSize="MED", 
+                    sFix="%", 
+                    gcHigh="#27ae60", 
+                    gcLow="#e74c3c", 
+                    gcMid="#f39c12"
+                )
+            
+            with col2:
+                if new_score is not None:
+                    st.markdown("**After Policies**")
+                    streamviz.gauge(
+                        new_score / 100, 
+                        gSize="MED", 
+                        sFix="%", 
+                        gcHigh="#27ae60", 
+                        gcLow="#e74c3c", 
+                        gcMid="#f39c12"
+                    )
+                    
+                    # improvement = new_score - original_score
+                    # if improvement > 0:
+                    #     st.success(f"📈 +{improvement:.1f} points")
+                    # elif improvement < 0:
+                    #     st.error(f"📉 {improvement:.1f} points")
+                    # else:
+                    #     st.info("➡️ No change")
+                else:
+                    st.markdown("**After Policies**")
+                    st.info("Select policies to see impact")
+        else:
+            st.warning("Unable to calculate WEFE scores.")
+        
+        return original_score, new_score
+        
+    except Exception as e:
+        st.error(f"Error displaying gauge charts: {e}")
+        return None, None

@@ -2,7 +2,7 @@ import streamlit as st
 import os
 from src.pages.initial_page import get_selected_lab_info
 from src.policy.data import get_policy_categories, get_policies_by_category, load_policies
-from src.policy.visualization import create_indicators_heatmap, create_improved_indicators_heatmap
+from src.policy.visualization import create_indicators_heatmap, create_improved_indicators_heatmap, create_and_display_gauge_scoring
 from src.policy.ui import (
     render_policy_details, 
     create_and_display_indicator_table, 
@@ -10,6 +10,7 @@ from src.policy.ui import (
     render_display_controls
 )
 from src.core.intervention_optimizer import run_policy_simulation
+
 
 
 def render_policy_tab():
@@ -59,25 +60,41 @@ def render_policy_tab():
         if lab_info and 'wefe_pillars' in lab_info:
             selected_policies = st.session_state.get('selected_policies', [])
             
-            show_original, show_improved, show_table = render_display_controls(selected_policies)
+            show_heatmaps, show_table = render_display_controls(selected_policies)
             
-            if show_original:
-                heatmap_fig = create_indicators_heatmap(lab_info)
-                if heatmap_fig:
-                    st.plotly_chart(heatmap_fig, use_container_width=True)
-                else:
-                    st.info("Original heatmap data not available for the selected living lab.")
+            # Display gauge charts
+            st.markdown("---")
+            st.subheader("WEFE Score Comparison")
+            create_and_display_gauge_scoring(lab_info, selected_policies)
+            
+            # Display heatmaps side by side
+
+            
+            if show_heatmaps:
+                st.markdown("---")
+                
+                heatmap_col1, heatmap_col2 = st.columns(2)
+                
+                with heatmap_col1:
+                    heatmap_fig = create_indicators_heatmap(lab_info)
+                    if heatmap_fig:
+                        st.plotly_chart(heatmap_fig, use_container_width=True)
+                    else:
+                        st.info("Original heatmap data not available.")
+                
+                with heatmap_col2:
+                    if selected_policies:
+                        improved_heatmap_fig = create_improved_indicators_heatmap(lab_info, selected_policies)
+                        if improved_heatmap_fig:
+                            st.plotly_chart(improved_heatmap_fig, use_container_width=True)
+                        else:
+                            st.info("Unable to generate improved heatmap.")
+                    else:
+                        st.markdown("**After Policy Improvements**")
+                        st.info("Select policies to see improvements")
             
             # Display policy impact table if selected
             if show_table:
-                create_and_display_indicator_table(lab_info, selected_policies)
-            
-            # Display improved heatmap if selected and policies are available
-            if show_improved and selected_policies:
-                improved_heatmap_fig = create_improved_indicators_heatmap(lab_info, selected_policies)
-                if improved_heatmap_fig:
-                    st.plotly_chart(improved_heatmap_fig, use_container_width=True)
-                else:
-                    st.info("Unable to generate improved heatmap.")
+                create_and_display_indicator_table(lab_info, selected_policies)            
         else:
             st.info("WEFE scores not available for the selected living lab.")

@@ -4,6 +4,11 @@ WEFE Nexus calculation functions and utilities
 import json
 import os
 from typing import Dict, List
+import sys
+
+# Add the src directory to the path to import policy modules
+sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
+from policy.data import load_policies, parse_change_value
 
 
 def load_pillars():
@@ -365,3 +370,65 @@ def format_indicator_with_unit(indicator_name, value, units_dict=None):
     else:
         # No unit information available
         return f"{value}"
+
+
+def calculate_new_wefe_score_after_policies(lab_info, selected_policies):
+    """
+    Calculate the new WEFE score after applying selected policies to indicators
+    
+    Args:
+        lab_info: Complete living lab data
+        selected_policies: List of selected policy titles
+    
+    Returns:
+        New overall WEFE score (0-100) or None if calculation fails
+    """
+    if not lab_info or 'wefe_pillars' not in lab_info or not selected_policies:
+        return None
+    
+    try:
+        policies = load_policies()
+        policies_by_title = {p['title']: p for p in policies}
+        
+        # Calculate indicator improvements from selected policies
+        indicator_improvements = {}
+        for policy_title in selected_policies:
+            policy_obj = policies_by_title.get(policy_title)
+            if not policy_obj:
+                continue
+            for coll_key in ('synergies', 'trade_offs'):
+                for item in policy_obj.get(coll_key, []) or []:
+                    for ind in (item.get('affected_indicators') or []):
+                        indicator_key = ind.get('indicator')
+                        change_value = parse_change_value(ind.get('expected_change'))
+                        if indicator_key:
+                            if indicator_key not in indicator_improvements:
+                                indicator_improvements[indicator_key] = 0
+                            indicator_improvements[indicator_key] += change_value
+        
+        # Create a copy of lab_info with improved indicators
+        improved_lab_info = lab_info.copy()
+        improved_lab_info['wefe_pillars'] = lab_info['wefe_pillars'].copy()
+        
+        # Apply improvements to indicators
+        for pillar_key in improved_lab_info['wefe_pillars']:
+            pillar_data = improved_lab_info['wefe_pillars'][pillar_key]
+            if 'indicators' in pillar_data:
+                pillar_data['indicators'] = pillar_data['indicators'].copy()
+                for category_name, category_data in pillar_data['indicators'].items():
+                    if isinstance(category_data, dict):
+                        category_data = category_data.copy()
+                        for indicator_name, indicator_value in category_data.items():
+                            if indicator_name in indicator_improvements:
+                                improvement_percent = indicator_improvements[indicator_name]
+                                improved_value = indicator_value + (indicator_value / 100 * improvement_percent)
+                                category_data[indicator_name] = improved_value
+                        pillar_data['indicators'][category_name] = category_data
+        
+        # Calculate new overall score
+        new_score, _ = calculate_overall_wefe_score(improved_lab_info)
+        return new_score
+        
+    except Exception as e:
+        print(f"Error calculating new WEFE score: {e}")
+        return None

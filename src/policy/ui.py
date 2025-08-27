@@ -257,21 +257,12 @@ def render_selected_policies_section(selected_policies):
 def render_display_controls(selected_policies):
     """Render the display control checkboxes"""
     st.markdown("### Display Options")
-    col_check1, col_check2, col_check3 = st.columns(3)
+    col_check1, col_check2 = st.columns(2)
     
     with col_check1:
         show_original = st.checkbox("Show Original Heatmap", value=True, key="show_original_heatmap")
     
     with col_check2:
-        show_improved = st.checkbox(
-            "Show Improved Heatmap", 
-            value=bool(selected_policies), 
-            disabled=not bool(selected_policies),
-            key="show_improved_heatmap",
-            help="Select policies to enable this option"
-        )
-    
-    with col_check3:
         show_table = st.checkbox(
             "Show Policy Impact Table", 
             value=bool(selected_policies), 
@@ -279,5 +270,4 @@ def render_display_controls(selected_policies):
             key="show_policy_table",
             help="Select policies to enable this option"
         )
-    
-    return show_original, show_improved, show_table
+    return show_original, show_table
