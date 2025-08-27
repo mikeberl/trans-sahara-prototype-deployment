@@ -121,7 +121,6 @@ def create_and_display_indicator_table(lab_info, selected_policy_titles):
             policy_columns_with_percent = [f"{title} (%)" for title in selected_policy_titles]
             value_table = pd.DataFrame(0, index=indicator_rows, columns=policy_columns_with_percent)
 
-            # Fill each policy column based on its synergies and trade-offs
             for idx, policy_title in enumerate(selected_policy_titles):
                 policy_column = policy_columns_with_percent[idx]
                 policy_obj = policies_by_title.get(policy_title)

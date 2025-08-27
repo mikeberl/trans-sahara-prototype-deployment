@@ -47,7 +47,7 @@ def render_policy_tab():
                 improving_policies = get_policies_by_indicator(policies, selected_indicator)
                 
                 if improving_policies:
-                    st.success(f"Found {len(improving_policies)} policies that improve '{selected_indicator_with_number}' (sorted by improvement magnitude, smallest to largest)")
+                    st.success(f"Found {len(improving_policies)} policies that improve '{selected_indicator_with_number}' (sorted by improvement magnitude, largest to smallest)")
                     
                     # Get improvement details for display
                     improvement_details = []

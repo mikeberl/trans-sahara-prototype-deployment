@@ -134,7 +134,7 @@ def get_all_indicators_with_numbers() -> List[str]:
 
 
 def get_policies_by_indicator(policies: List[Dict], indicator: str) -> List[Dict]:
-    """Get policies that provide improvement (synergy) to a specific indicator, sorted by improvement magnitude in ascending order"""
+    """Get policies that provide improvement (synergy) to a specific indicator, sorted by improvement magnitude in descending order"""
     improving_policies = []
     
     for policy in policies:
@@ -155,8 +155,8 @@ def get_policies_by_indicator(policies: List[Dict], indicator: str) -> List[Dict
             if any(item['policy'] == policy for item in improving_policies):
                 break  # Already found this policy improves the indicator
     
-    # Sort by improvement magnitude in ascending order (smallest to largest)
-    improving_policies.sort(key=lambda x: x['improvement_value'])
+    # Sort by improvement magnitude in descending order (largest to smallest)
+    improving_policies.sort(key=lambda x: x['improvement_value'], reverse=True)
     
     # Return just the policies in sorted order
     return [item['policy'] for item in improving_policies]
