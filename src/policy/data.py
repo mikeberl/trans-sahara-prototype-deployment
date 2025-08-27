@@ -138,25 +138,20 @@ def get_policies_by_indicator(policies: List[Dict], indicator: str) -> List[Dict
     improving_policies = []
     
     for policy in policies:
-        # Check synergies for positive changes to the indicator
         for synergy in policy.get('synergies', []):
             for affected_ind in synergy.get('affected_indicators', []):
                 if affected_ind.get('indicator') == indicator:
                     change_value = parse_change_value(affected_ind.get('expected_change'))
-                    # Check if the change is positive (improvement)
                     if change_value > 0:
-                        # Store policy with its improvement value for sorting
                         improving_policies.append({
                             'policy': policy,
                             'improvement_value': change_value,
                             'expected_change': affected_ind.get('expected_change')
                         })
-                        break  # Found this policy improves the indicator, no need to check more synergies
+                        break
             if any(item['policy'] == policy for item in improving_policies):
-                break  # Already found this policy improves the indicator
+                break
     
-    # Sort by improvement magnitude in descending order (largest to smallest)
     improving_policies.sort(key=lambda x: x['improvement_value'], reverse=True)
     
-    # Return just the policies in sorted order
     return [item['policy'] for item in improving_policies]
