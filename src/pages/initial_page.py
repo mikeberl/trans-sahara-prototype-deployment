@@ -6,6 +6,7 @@ import pandas as pd
 from src.core.data_loader import load_living_labs, get_regions_from_labs
 from src.core.wefe_calculations import PILLARS, calculate_all_pillar_scores, calculate_overall_wefe_score, get_indicator_units, format_indicator_with_unit
 import streamviz
+from src.policy.data import get_indicator_numbering, get_indicator_with_number
 
 def create_living_labs_map(selected_lab=None):
     """Create an interactive map showing all living lab areas as squares"""
@@ -143,7 +144,8 @@ def render_wefe_pillars_view(lab_info):
                     st.markdown(f"**{subpillar.capitalize()}**")
                     for ind_name, ind_value in subdata.items():
                         formatted_value = format_indicator_with_unit(ind_name, ind_value, units_dict)
-                        st.write(f"{ind_name.replace('_', ' ').capitalize()}: {formatted_value}")
+                        numbered_indicator = get_indicator_with_number(ind_name)
+                        st.write(f"{numbered_indicator.replace('_', ' ').capitalize()}: {formatted_value}")
 
 def render_overall_wefe_score(lab_info):
     """Render the overall WEFE Nexus score container"""

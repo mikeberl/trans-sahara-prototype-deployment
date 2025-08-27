@@ -1,7 +1,7 @@
 import streamlit as st
 import pandas as pd
 from typing import Dict, List, Any
-from src.policy.data import load_policies, parse_change_value
+from src.policy.data import load_policies, parse_change_value, get_indicator_with_number
 
 
 def render_synergy_tradeoff_item(item: Dict, policy_title: str, is_synergy: bool = True):
@@ -87,7 +87,8 @@ def create_and_display_indicator_table(lab_info, selected_policy_titles):
         for category_key, indicator_group in indicators_obj.items():
             if isinstance(indicator_group, dict):
                 for indicator_key in indicator_group.keys():
-                    row_name = f"{pillar_key} / {category_key} / {indicator_key}"
+                    numbered_indicator = get_indicator_with_number(indicator_key)
+                    row_name = f"{pillar_key} / {category_key} / {numbered_indicator}"
                     all_indicator_rows.append(row_name)
                     indicator_to_row[indicator_key] = row_name
 

@@ -4,7 +4,7 @@ import numpy as np
 import streamviz
 from typing import Dict, List
 from src.core.wefe_calculations import PILLARS, calculate_all_pillar_scores, normalize_indicator, get_indicators_to_invert
-from src.policy.data import load_policies, load_pillars_definitions, infer_policy_pillar, parse_change_value
+from src.policy.data import load_policies, load_pillars_definitions, infer_policy_pillar, parse_change_value, get_indicator_with_number
 
 
 # create_wefe_radar_plot removed - was not being used

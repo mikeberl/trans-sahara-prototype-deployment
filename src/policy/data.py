@@ -105,8 +105,36 @@ def get_all_indicators() -> List[str]:
     return sorted(indicators)
 
 
+def get_indicator_numbering() -> Dict[str, int]:
+    """Get a mapping of indicator keys to their sequential numbers"""
+    pillars = load_pillars_definitions()
+    indicator_numbering = {}
+    counter = 1
+    
+    for pillar_data in pillars.get('wefe_pillars', {}).values():
+        for category_data in pillar_data.get('categories', {}).values():
+            for indicator_key in category_data.get('indicators', {}).keys():
+                indicator_numbering[indicator_key] = counter
+                counter += 1
+    
+    return indicator_numbering
+
+
+def get_indicator_with_number(indicator_key: str) -> str:
+    """Get indicator key with its number prefix"""
+    numbering = get_indicator_numbering()
+    indicator_num = numbering.get(indicator_key, 0)
+    return f"{indicator_num:02d}. {indicator_key}" if indicator_num > 0 else indicator_key
+
+
+def get_all_indicators_with_numbers() -> List[str]:
+    """Get all available indicators with their numbers"""
+    indicators = get_all_indicators()
+    return [get_indicator_with_number(ind) for ind in indicators]
+
+
 def get_policies_by_indicator(policies: List[Dict], indicator: str) -> List[Dict]:
-    """Get policies that provide improvement (synergy) to a specific indicator"""
+    """Get policies that provide improvement (synergy) to a specific indicator, sorted by improvement magnitude in ascending order"""
     improving_policies = []
     
     for policy in policies:
@@ -117,9 +145,18 @@ def get_policies_by_indicator(policies: List[Dict], indicator: str) -> List[Dict
                     change_value = parse_change_value(affected_ind.get('expected_change'))
                     # Check if the change is positive (improvement)
                     if change_value > 0:
-                        improving_policies.append(policy)
+                        # Store policy with its improvement value for sorting
+                        improving_policies.append({
+                            'policy': policy,
+                            'improvement_value': change_value,
+                            'expected_change': affected_ind.get('expected_change')
+                        })
                         break  # Found this policy improves the indicator, no need to check more synergies
-            if policy in improving_policies:
+            if any(item['policy'] == policy for item in improving_policies):
                 break  # Already found this policy improves the indicator
     
-    return improving_policies
+    # Sort by improvement magnitude in ascending order (smallest to largest)
+    improving_policies.sort(key=lambda x: x['improvement_value'])
+    
+    # Return just the policies in sorted order
+    return [item['policy'] for item in improving_policies]

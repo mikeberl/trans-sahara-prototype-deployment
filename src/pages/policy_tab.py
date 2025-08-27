@@ -1,7 +1,7 @@
 import streamlit as st
 import os
 from src.pages.initial_page import get_selected_lab_info
-from src.policy.data import get_policy_categories, get_policies_by_category, load_policies, get_all_indicators, get_policies_by_indicator
+from src.policy.data import get_policy_categories, get_policies_by_category, load_policies, get_all_indicators_with_numbers, get_policies_by_indicator, get_indicator_numbering
 from src.policy.visualization import create_indicators_heatmap, create_improved_indicators_heatmap, create_and_display_gauge_scoring
 from src.policy.ui import (
     render_policy_details, 
@@ -29,24 +29,51 @@ def render_policy_tab():
         
         if search_by_indicator:
             # Show indicator selection instead of category selection
-            all_indicators = get_all_indicators()
-            selected_indicator = st.selectbox(
+            all_indicators_with_numbers = get_all_indicators_with_numbers()
+            indicator_numbering = get_indicator_numbering()
+            
+            selected_indicator_with_number = st.selectbox(
                 "Select Indicator to Search:",
-                all_indicators,
+                all_indicators_with_numbers,
                 key="indicator_select",
                 help="Select an indicator to find policies that improve it"
             )
             
-            if selected_indicator:
+            if selected_indicator_with_number:
+                # Extract the actual indicator key from the numbered display
+                selected_indicator = selected_indicator_with_number.split('. ', 1)[1] if '. ' in selected_indicator_with_number else selected_indicator_with_number
+                
                 # Get policies that improve the selected indicator
                 improving_policies = get_policies_by_indicator(policies, selected_indicator)
                 
                 if improving_policies:
-                    st.success(f"Found {len(improving_policies)} policies that improve '{selected_indicator}'")
+                    st.success(f"Found {len(improving_policies)} policies that improve '{selected_indicator_with_number}' (sorted by improvement magnitude, smallest to largest)")
+                    
+                    # Get improvement details for display
+                    improvement_details = []
                     for policy in improving_policies:
-                        render_policy_details(policy)
+                        for synergy in policy.get('synergies', []):
+                            for affected_ind in synergy.get('affected_indicators', []):
+                                if affected_ind.get('indicator') == selected_indicator:
+                                    improvement_details.append({
+                                        'policy': policy,
+                                        'expected_change': affected_ind.get('expected_change'),
+                                        'description': synergy.get('title', '')
+                                    })
+                                    break
+                            else:
+                                continue
+                            break
+                    
+                    # Display policies with improvement information
+                    for detail in improvement_details:
+                        with st.expander(f"📈 {detail['policy']['title']} - Improvement: {detail['expected_change']}"):
+                            render_policy_details(detail['policy'])
+                            st.info(f"**Improvement to {selected_indicator_with_number}**: {detail['expected_change']}")
+                            if detail['description']:
+                                st.caption(f"**Synergy**: {detail['description']}")
                 else:
-                    st.info(f"No policies found that improve the '{selected_indicator}' indicator.")
+                    st.info(f"No policies found that improve the '{selected_indicator_with_number}' indicator.")
             else:
                 st.info("Please select an indicator to search for improving policies.")
         else:
