@@ -142,8 +142,10 @@ def create_and_display_indicator_table(lab_info, selected_policy_titles):
                 parts = row_name.split(' / ')
                 if len(parts) == 3:
                     pillar_key, category_key, indicator_key = parts
+                    # Remove numeric prefix (e.g., "01. ") from indicator key for lookup
+                    raw_indicator_key = indicator_key.split('. ', 1)[1] if '. ' in indicator_key else indicator_key
                     try:
-                        actual_value = wefe[pillar_key]['indicators'][category_key][indicator_key]
+                        actual_value = wefe[pillar_key]['indicators'][category_key][raw_indicator_key]
                         actual_values.append(round(actual_value, 2))
                     except (KeyError, TypeError):
                         actual_values.append(0.00)
