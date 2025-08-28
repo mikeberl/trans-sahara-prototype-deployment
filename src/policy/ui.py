@@ -137,6 +137,11 @@ def create_and_display_indicator_table(lab_info, selected_policy_titles):
                                 new_value = current_value + change_value
                                 value_table.at[row_name, policy_column] = round(new_value, 2)
 
+            # Prepare meta columns for display
+            numbers_col: List[str] = []
+            names_col: List[str] = []
+            wefe_col: List[str] = []
+            dim_col: List[str] = []
             actual_values = []
             for row_name in indicator_rows:
                 parts = row_name.split(' / ')
@@ -144,15 +149,48 @@ def create_and_display_indicator_table(lab_info, selected_policy_titles):
                     pillar_key, category_key, indicator_key = parts
                     # Remove numeric prefix (e.g., "01. ") from indicator key for lookup
                     raw_indicator_key = indicator_key.split('. ', 1)[1] if '. ' in indicator_key else indicator_key
+                    # Extract number and indicator name for display
+                    if '. ' in indicator_key:
+                        num_str, ind_name = indicator_key.split('. ', 1)
+                    else:
+                        num_str, ind_name = '', indicator_key
+                    numbers_col.append(num_str)
+                    names_col.append(ind_name)
+                    # Map WEFE pillar to initials
+                    pillar_map = {
+                        'water': 'W',
+                        'energy': 'E',
+                        'food': 'F',
+                        'ecosystems': 'EC'
+                    }
+                    wefe_col.append(pillar_map.get(pillar_key, pillar_key[:1].upper()))
+                    # Map category to required codes
+                    dim_map = {
+                        'access': 'AC',
+                        'availability': 'AV',
+                        'biodiversity': 'B',
+                        'ecosystem_services': 'Es'
+                    }
+                    dim_col.append(dim_map.get(category_key, category_key[:2].upper()))
                     try:
                         actual_value = wefe[pillar_key]['indicators'][category_key][raw_indicator_key]
                         actual_values.append(round(actual_value, 2))
                     except (KeyError, TypeError):
                         actual_values.append(0.00)
                 else:
+                    numbers_col.append('')
+                    names_col.append('')
+                    wefe_col.append('')
+                    dim_col.append('')
                     actual_values.append(0.00)
             
-            value_table.insert(0, 'Actual Value', actual_values)
+            # Insert meta columns at the beginning
+            value_table.insert(0, 'No.', numbers_col)
+            value_table.insert(1, 'Indicator', names_col)
+            value_table.insert(2, 'WEFE', wefe_col)
+            value_table.insert(3, 'DIM', dim_col)
+            # Then insert computed numeric columns
+            value_table.insert(4, 'Actual Value', actual_values)
             value_table['Total Improvement (%)']  = value_table[policy_columns_with_percent].sum(axis=1)
             
             value_of_improvement = []
@@ -171,10 +209,45 @@ def create_and_display_indicator_table(lab_info, selected_policy_titles):
                 if col in value_table.columns:
                     value_table[col] = value_table[col].astype(float)
 
+            # Ensure the original combined index is not displayed as a first column
+            value_table = value_table.reset_index(drop=True)
+
+            # Sort rows by WEFE category (W, E, F, EC), then by indicator number and name
+            _wefe_sort_map = {'W': 0, 'E': 1, 'F': 2, 'EC': 3}
+            value_table['__wefe_order'] = value_table['WEFE'].map(lambda x: _wefe_sort_map.get(x, 999))
+            def _parse_num(s):
+                try:
+                    return int(str(s))
+                except Exception:
+                    return 9999
+            value_table['__num_order'] = value_table['No.'].map(_parse_num)
+            value_table = value_table.sort_values(by=['__wefe_order', '__num_order', 'Indicator']).reset_index(drop=True)
+            value_table = value_table.drop(columns=['__wefe_order', '__num_order'])
+
+            # Compute alternating background per WEFE category for easier scanning
+            wefe_values = list(value_table['WEFE']) if 'WEFE' in value_table.columns else []
+            wefe_row_bg: List[str] = []
+            last_wefe = None
+            toggle = False
+            for w in wefe_values:
+                if w != last_wefe:
+                    toggle = not toggle
+                    last_wefe = w
+                wefe_row_bg.append('background-color: #f7f7f7' if toggle else 'background-color: #ffffff')
+
             def _style_cell(val, row_idx, col_name):
                 try:
                     num = float(val)
                 except Exception:
+                    # Non-numeric cells get the base WEFE banding
+                    if row_idx is not None and 0 <= row_idx < len(wefe_row_bg):
+                        return wefe_row_bg[row_idx]
+                    return ''
+
+                # Do not apply numeric styling to metadata columns; use base WEFE banding
+                if col_name in ['No.', 'Indicator', 'WEFE', 'DIM']:
+                    if row_idx is not None and 0 <= row_idx < len(wefe_row_bg):
+                        return wefe_row_bg[row_idx]
                     return ''
 
                 if col_name == 'Actual Value':
@@ -208,10 +281,14 @@ def create_and_display_indicator_table(lab_info, selected_policy_titles):
                     return 'background-color: #e8f5e9; color: #1b5e20'
                 if num < 0:
                     return 'background-color: #ffebee; color: #b71c1c'
+                # Zero-change numeric cells get base WEFE banding
+                if row_idx is not None and 0 <= row_idx < len(wefe_row_bg):
+                    return wefe_row_bg[row_idx]
                 return ''
 
+            # Only format numeric columns; leave meta columns unformatted
             format_dict = {}
-            for col in value_table.columns:
+            for col in numeric_columns:
                 if col in ['Actual Value', 'Value of Improvement', 'Final State']:
                     format_dict[col] = "{:.2f}"
                 else:
@@ -227,7 +304,7 @@ def create_and_display_indicator_table(lab_info, selected_policy_titles):
                 return styled_df
             
             styled = styled.apply(apply_styling, axis=None)
-            st.dataframe(styled, use_container_width=True)
+            st.dataframe(styled, use_container_width=True, hide_index=True)
 
 
 def render_selected_policies_section(selected_policies):
